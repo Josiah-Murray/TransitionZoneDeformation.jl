@@ -24,10 +24,12 @@ C1 = 2 #Foundation damping after tz
 k0 = 1 #Foundation stiffness before tz
 k1 = 2 #Foundation stiffness after tz
 
+xtz = 1 #Position of transition zone
+
 P = 1 #Force conveyed by point load
 v = 1 #Speed of point force
 
-parameters = [EI, m, C0, C1, k0, k1, P, v]
+parameters = [EI, m, C0, C1, k0, k1, xtz, P, v]
 
 
 #||--Solution parameters--||#
@@ -50,3 +52,12 @@ tVals = LinRange(tMin,tMax,tNum)
 
 #Calculate the deformation of the beam for given times and x values
 deformations = CalcDynamicDeformation(xVals,tVals, parameters)
+
+
+##
+
+#||||||||||||||||#
+#||--Graphing--||#
+#||||||||||||||||#
+
+#TODO Implement graphing of solution.
