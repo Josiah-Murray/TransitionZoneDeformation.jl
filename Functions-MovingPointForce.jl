@@ -25,9 +25,8 @@ function CalcDynamicDeformation(xVals,tVals, parameters)
 
 
       #Solve for the deformation of the beam at each time and x value.
-      #deformation = real( DirectQuadratureMethod(t, s-> LaplaceSpaceFunctionMovingPointForce1TZ(x,s,parameters)) )
-      ft = InverseLaplace.Weeks( s-> LaplaceSpaceFunctionMovingPointForce1TZ(x,s,parameters), 16)
-      deformation = ft(t)
+      deformation = real( DirectQuadratureMethod(t, s-> LaplaceSpaceFunctionMovingPointForce1TZ(x,s,parameters)) )
+
 
       #Update the deformations matrix.
       deformations[ti,xi] = deformation
@@ -104,16 +103,9 @@ function CoefficientSolverMovingPointForce1TZ(s, rVals, parameters)
     RHS[row] = (-s/v)^(row-1)*( P*exp(-s*xtz/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + C0*s + k0   ) - 1/( ( (EI*s^4)/v^4  ) +m*s^2 + C1*s + k1   )   )
   end
 
-  try
-    bVals = LHSMatrix\RHS
-  catch
-    println("Error values:")
-    println(s)
-    println(RHS)
-    println(LHSMatrix)
 
-    throw(error("It broke :("))
-  end
+  bVals = LHSMatrix\RHS
+
 
 
   return bVals
