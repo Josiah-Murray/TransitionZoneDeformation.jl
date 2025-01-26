@@ -41,9 +41,43 @@ end
 #The solution for the deformation in Laplace space.
 #Defined here so that it can be inverted elsewhere.
 function LaplaceSpaceFunctionMovingPointForce1TZ(x,s, parameters)
-  EI, m, C0, C1, k0, k1, xtz, P, v = parameters
+  EI, m, C0, C1, k0, k1, xp, xtz, P, v = parameters
 
   #||--Find r values--||#
+  rVals = RValues(x,s, parameters)
+  r1, r2, r3, r4 = rVals
+
+
+  #||--Find b values--||#
+  #Solve for the undetermined coefficients by solving a linear system
+  b1,b2,b3,b4,b5,b6,b7,b8 = CoefficientSolverMovingPointForce1TZ(s,rVals,parameters)
+
+  #||--Construct Laplace-space function--||#
+  #Need to choose the correct Laplace-domain function
+  #based on where our x value is relative to the transition zone and starting point of the point force.
+
+  if(x<xp)
+    #leftmost segment
+    ŷ = b1*exp(r1*x) + b2*exp(r4*x)
+
+  elseif (x<xtz)
+    #Inner segment
+    ŷ = b3*exp(r1*x) + b4*exp(r2*x) + b5*exp(r3*x) + b6*exp(r4*x) + (P/abs(v))*(exp(-s*x/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C0*s + k0 )  )
+
+  else
+    #Rightmost segment
+    ŷ = b7*exp(r2*x) + b8*exp(r3*x) + (P/abs(v))*(exp(-s*x/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C1*s+k1 )  )
+
+  end
+
+
+
+  return ŷ
+
+end
+
+function RValues(x,s, parameters)
+  EI, m, C0, C1, k0, k1, xp, xtz, P, v = parameters
   if(x<xtz)
     r⁴ = -(m*s^2 + C0*s + k0)/EI
   else
@@ -59,48 +93,62 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x,s, parameters)
   r4 = -r1*1im
 
   rVals = [r1,r2,r3,r4]
-
-
-  #||--Find b values--||#
-  #Solve for the undetermined coefficients by solving a linear system
-  b1,b2,b3,b4 = CoefficientSolverMovingPointForce1TZ(s,rVals,parameters)
-
-  #||--Construct Laplace-space function--||#
-  #Need to choose the correct Laplace-domain function
-  #based on where our x value is relative to the transition zone.
-  if(x<xtz)
-    #Solve for y hat 0, i.e. left of transition zone.
-    ŷ =  b1*exp(r1*x) + b4*exp(r4*x) + (P/abs(v))*(exp(-s*x/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C0*s+k0 )  )
-  else
-    #Solve for y hat 1, i.e. Right of transition zone.
-    ŷ =  b2*exp(r2*x) + b3*exp(r3*x) + (P/abs(v))*(exp(-s*x/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C1*s+k1 )  )
-  end
-
-  return ŷ
-
 end
+
 
 #Solves for the undetermined coefficients
 function CoefficientSolverMovingPointForce1TZ(s, rVals, parameters)
-  EI, m, C0, C1, k0, k1, xtz, P, v = parameters
+  EI, m, C0, C1, k0, k1, xp, xtz, P, v = parameters
 
   #LHS matrix for system enforcing continuity conditions.
-  LHSMatrix = zeros(Complex{Float64}, 4,4)
+  LHSMatrix = zeros(Complex{Float64}, 8,8)
 
   #RHS Vector for system.
-  RHS = zeros(Complex{Float64},4)
+  RHS = zeros(Complex{Float64},8)
 
+  leftRValues = RValues(xtz-2*eps(),s, parameters)
+  rightRValues = RValues(xtz+2*eps(),s, parameters)
+
+  #||--Setting up LHSMatrix--||#
+
+  #First block (associated with left most beam section at xp)
   for row = 1:4
-    for column  = 1:4
-      if column == 1 || column == 4
-        sign = 1
-      else
-        sign = -1
-      end
-      LHSMatrix[row, column] = sign*rVals[column]^(row-1)*exp(rVals[column]*xtz)
-    end
+    LHSMatrix[row, 1] = -leftRValues[1]^(row-1)*exp(leftRValues[1]*xp)
+    LHSMatrix[row, 2] = -leftRValues[4]^(row-1)*exp(leftRValues[4]*xp)
+  end
 
-    RHS[row] = (-s/v)^(row-1)*( P*exp(-s*xtz/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + C0*s + k0   ) - 1/( ( (EI*s^4)/v^4  ) +m*s^2 + C1*s + k1   )   )
+  #Upper middle block (associated with middle beam section at the point force origin)
+  for row = 1:4
+    for column = 3:6
+      LHSMatrix[row, column] = leftRValues[column-2]^(row-1)*exp(leftRValues[column-2]*xp)
+    end
+  end
+
+
+  #Lower middle block (associated with the middle beam section at the transition zone)
+  for row = 5:8
+    for column = 3:6
+      LHSMatrix[row, column] = leftRValues[column-2]^(row-4-1)*exp(leftRValues[column-2]*xtz)
+    end
+  end
+
+  #Bottom right block (associated with the rightmost beam section at the transition zone)
+  for row = 5:8
+    LHSMatrix[row, 7] = rightRValues[2]^(row-4-1)*exp(rightRValues[2]*xtz )
+    LHSMatrix[row, 8] = rightRValues[3]^(row-4-1)*exp(rightRValues[3]*xtz )
+  end
+
+
+  #||--RHS vector--||#
+  #Top section (associated with the point force origin)
+  for row = 1:4
+    RHS[row] = -(-s/v)^(row-1)*(  ( P*exp(-s*xtz/v)/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + C0*s + k0   )   )
+  end
+
+
+  #Bottom section (associated with transition zone)
+  for row = 5:8
+    RHS[row] = (-s/v)^(row-4-1)*( P*exp(-s*xtz/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + C0*s + k0   ) - 1/( ( (EI*s^4)/v^4  ) +m*s^2 + C1*s + k1   )   )
   end
 
 
