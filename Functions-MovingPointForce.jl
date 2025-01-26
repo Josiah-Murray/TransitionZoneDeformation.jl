@@ -128,7 +128,7 @@ function CoefficientSolverMovingPointForce1TZ(s, rVals, parameters)
   #Lower middle block (associated with the middle beam section at the transition zone)
   for row = 5:8
     for column = 3:6
-      LHSMatrix[row, column] = leftRValues[column-2]^(row-4-1)*exp(leftRValues[column-2]*xtz)
+      LHSMatrix[row, column] = -leftRValues[column-2]^(row-4-1)*exp(leftRValues[column-2]*xtz)
     end
   end
 

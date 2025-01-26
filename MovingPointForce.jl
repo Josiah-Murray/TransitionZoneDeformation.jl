@@ -64,13 +64,18 @@ end
 
 
 
-myPlt = plot(xVals, tVals,  deformations, st=:surface)
-display(myPlt)
-println("Finished")
+
 ##
 
 #||||||||||||||||#
 #||--Graphing--||#
 #||||||||||||||||#
 
-#TODO Implement graphing of solution.
+#||||----Surface----||||#
+
+myPlt = plot(xVals, tVals,  deformations, st=:surface)
+display(myPlt)
+println("Finished")
+
+
+#TODO Add an animation.
