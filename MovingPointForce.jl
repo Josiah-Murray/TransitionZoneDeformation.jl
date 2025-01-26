@@ -23,9 +23,9 @@ m = 48 #Mass per unit length of beam
 C0 = 10^7 #Foundation damping before tz
 C1 = C0 #Foundation damping after tz
 k0 = 10^7 #Foundation stiffness before tz
-k1 = 2*k0 #Foundation stiffness after tz
+k1 = 4*k0 #Foundation stiffness after tz
 
-xtz = 1 #Position of transition zone
+xtz = 2 #Position of transition zone
 xp = 0 #Starting position of point force
 
 P = 10^4 #Force conveyed by point load
@@ -37,12 +37,12 @@ parameters = [EI, m, C0, C1, k0, k1, xp, xtz, P, v]
 #||--Solution parameters--||#
 #Things like the time and space values that for which I want an evaluation.
 xLeft = -1
-xRight = 2
+xRight = 4
 xNum = 100
 xVals = LinRange(xLeft,xRight,xNum)
 
 tMin = 0
-tMax = 2
+tMax = 6
 tNum = 100
 tVals = LinRange(tMin,tMax,tNum)
 
@@ -79,3 +79,7 @@ println("Finished")
 
 
 #TODO Add an animation.
+
+@gif for ti in 1:tNum
+  p = plot(xVals, deformations[ti,:], ylimits = (-0.01,0.001))
+end
