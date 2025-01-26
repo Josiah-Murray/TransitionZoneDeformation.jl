@@ -7,8 +7,7 @@ This file solves for the dynamic deformation of an infinite Euler-Bernoulli
 beam on a piecewise constant viscoelastic foundation subject to a moving load.
 The model is solved using the method of undetermined coefficients.
 =#
-using Plots
-plotlyjs()
+
 include("Functions-MovingPointForce.jl")
 
 
@@ -21,9 +20,9 @@ include("Functions-MovingPointForce.jl")
 EI = 2.3*10^3 #Beam stiffness
 m = 48 #Mass per unit length of beam
 C0 = 10^7 #Foundation damping before tz
-C1 = C0 #Foundation damping after tz
+C1 = 3*C0 #Foundation damping after tz
 k0 = 10^7 #Foundation stiffness before tz
-k1 = 4*k0 #Foundation stiffness after tz
+k1 = k0 #Foundation stiffness after tz
 
 xtz = 2 #Position of transition zone
 xp = 0 #Starting position of point force
@@ -71,15 +70,4 @@ end
 #||--Graphing--||#
 #||||||||||||||||#
 
-#||||----Surface----||||#
-
-myPlt = plot(xVals, tVals,  deformations, st=:surface)
-display(myPlt)
-println("Finished")
-
-
-#TODO Add an animation.
-
-@gif for ti in 1:tNum
-  p = plot(xVals, deformations[ti,:], ylimits = (-0.01,0.001))
-end
+include("Graphing-MovingPointForce.jl")
