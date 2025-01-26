@@ -28,7 +28,7 @@ k1 = 2*k0 #Foundation stiffness after tz
 xtz = 1 #Position of transition zone
 xp = 0 #Starting position of point force
 
-P = -10^4 #Force conveyed by point load
+P = 10^4 #Force conveyed by point load
 v = 1 #Speed of point force
 
 parameters = [EI, m, C0, C1, k0, k1, xp, xtz, P, v]

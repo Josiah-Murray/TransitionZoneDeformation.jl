@@ -142,7 +142,7 @@ function CoefficientSolverMovingPointForce1TZ(s, rVals, parameters)
   #||--RHS vector--||#
   #Top section (associated with the point force origin)
   for row = 1:4
-    RHS[row] = -(-s/v)^(row-1)*(  ( P*exp(-s*xtz/v)/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + C0*s + k0   )   )
+    RHS[row] = -(-s/v)^(row-1)*(  ( P*exp(-s*xp/v)/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + C0*s + k0   )   )
   end
 
 
@@ -167,7 +167,7 @@ end
 #Inverts the Laplace transform using a basic quadrature method.
 function DirectQuadratureMethod(t, LaplaceFunction)
   sRadius = -10
-  sNum = 1000
+  sNum = 100
   sStep = 2*sRadius/sNum
   sVals = 0.01*ones(sNum) + LinRange(-sRadius,sRadius,sNum)*1im
 
