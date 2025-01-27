@@ -21,13 +21,13 @@ EI = 2.3*10^3 #Beam stiffness
 m = 48 #Mass per unit length of beam
 C0 = 10^7 #Foundation damping before tz
 C1 = 3*C0 #Foundation damping after tz
-k0 = 10^7 #Foundation stiffness before tz
-k1 = k0 #Foundation stiffness after tz
+k0 = 6.9*10^7 #Foundation stiffness before tz
+k1 = 2*k0 #Foundation stiffness after tz
 
 xtz = 2 #Position of transition zone
 xp = 0 #Starting position of point force
 
-P = 10^4 #Force conveyed by point load
+P = 10^4 #Force conveyed by point load #BUG force has negative effect for some reason. Missing negative probably.
 v = 1 #Speed of point force
 
 parameters = [EI, m, C0, C1, k0, k1, xp, xtz, P, v]
@@ -53,18 +53,9 @@ tVals = LinRange(tMin,tMax,tNum)
 
 #Calculate the deformation of the beam for given times and x values
 deformations = CalcDynamicDeformation(xVals,tVals, parameters)
+println("Finished calculating - Beginning graphing:")
 ##
 
-tempDeformations = copy(deformations)
-for i in eachindex(tempDeformations)
-  tempDeformations[i] = max(-0.001, tempDeformations[i])
-  tempDeformations[i] = min(0.001, tempDeformations[i])
-end
-
-
-
-
-##
 
 #||||||||||||||||#
 #||--Graphing--||#

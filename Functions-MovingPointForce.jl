@@ -167,7 +167,7 @@ end
 #Inverts the Laplace transform using a basic quadrature method.
 function DirectQuadratureMethod(t, LaplaceFunction)
   sRadius = -10
-  sNum = 100
+  sNum = 5001
   sStep = 2*sRadius/sNum
   sVals = 0.01*ones(sNum) + LinRange(-sRadius,sRadius,sNum)*1im
 
