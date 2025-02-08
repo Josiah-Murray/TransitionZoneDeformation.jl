@@ -20,9 +20,9 @@ include("Functions-MovingPointForce.jl")
 EI = 2.3*10^3 #Beam stiffness
 m = 48 #Mass per unit length of beam
 C0 = 10^7 #Foundation damping before tz
-C1 = 3*C0 #Foundation damping after tz
+C1 = C0 #Foundation damping after tz
 k0 = 6.9*10^7 #Foundation stiffness before tz
-k1 = 2*k0 #Foundation stiffness after tz
+k1 = 0*2*k0 #Foundation stiffness after tz
 
 xtz = 2 #Position of transition zone
 xp = 0 #Starting position of point force
