@@ -62,11 +62,11 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x,s, parameters)
 
   elseif (x<xtz)
     #Inner segment
-    ŷ = b3*exp(r1*x) + b4*exp(r2*x) + b5*exp(r3*x) + b6*exp(r4*x) + (P/abs(v))*(exp(-s*x/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C0*s + k0 )  )
+    ŷ = b3*exp(r1*x) + b4*exp(r2*x) + b5*exp(r3*x) + b6*exp(r4*x)
 
   else
     #Rightmost segment
-    ŷ = b7*exp(r2*x) + b8*exp(r3*x) + (P/abs(v))*(exp(-s*x/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C1*s+k1 )  )
+    ŷ = b7*exp(r2*x) + b8*exp(r3*x)
 
   end
 
@@ -142,13 +142,14 @@ function CoefficientSolverMovingPointForce1TZ(s, rVals, parameters)
   #||--RHS vector--||#
   #Top section (associated with the point force origin)
   for row = 1:4
-    RHS[row] = -(-s/v)^(row-1)*(  ( P*exp(-s*xp/v)/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + C0*s + k0   )   )
+    RHS[row] = 0
   end
 
+  RHS[4] = P/(1+s^2)#influence of point force
 
   #Bottom section (associated with transition zone)
   for row = 5:8
-    RHS[row] = (-s/v)^(row-4-1)*( P*exp(-s*xtz/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + C0*s + k0   ) - 1/( ( (EI*s^4)/v^4  ) +m*s^2 + C1*s + k1   )   )
+    RHS[row] = 0
   end
 
 
@@ -166,7 +167,7 @@ end
 
 #Inverts the Laplace transform using a basic quadrature method.
 function DirectQuadratureMethod(t, LaplaceFunction)
-  sRadius = 10
+  sRadius = -10
   sNum = 5001
   sStep = 2*sRadius/sNum
   sVals = 0.01*ones(sNum) + LinRange(-sRadius,sRadius,sNum)*1im
