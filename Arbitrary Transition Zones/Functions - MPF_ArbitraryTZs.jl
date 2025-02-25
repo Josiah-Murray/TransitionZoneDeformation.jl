@@ -96,6 +96,7 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x,s, parameters)#TODO Update fu
 
   ŷ = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + (P/abs(v))*(exp(-s*x/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C*s + k )  )*Heaviside((x-xp)/v)
 
+
   return ŷ
 
 end
@@ -158,18 +159,19 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
 
         #Add row associated with continuity at point force
         r1, r2, r3, r4 = RValues(s,EI,m, tz.C_left, tz.k_left)
-        continuitySubMatrix = [-exp(r1*tz.location)  -exp(r2*tz.location) -exp(r3*tz.location) -exp(r4*tz.location) exp(r1*tz.location)  exp(r2*tz.location) exp(r3*tz.location) exp(r4*tz.location)]
+        continuitySubMatrix = [-exp(r1*xp)  -exp(r2*xp) -exp(r3*xp) -exp(r4*xp) exp(r1*xp)  exp(r2*xp) exp(r3*xp) exp(r4*xp)]
         for i = 1:3
-          continuitySubMatrix = [continuitySubMatrix; -r1^i*1exp(r1*tz.location)  -r2^i*exp(r2*x) -r3^i*exp(r3*tz.location) -r4^i*exp(r4*tz.location) r1^i*exp(r1*tz.location)  r2^i*exp(r2*tz.location) r3^i*exp(r3*tz.location) r4^i*exp(r4*tz.location) ]
+          continuitySubMatrix = [continuitySubMatrix; -r1^i*1exp(r1*xp)  -r2^i*exp(r2*xp) -r3^i*exp(r3*xp) -r4^i*exp(r4*xp) r1^i*exp(r1*xp)  r2^i*exp(r2*xp) r3^i*exp(r3*xp) r4^i*exp(r4*xp) ]
         end
         LHSMatrix = [LHSMatrix;     zeros(Complex{Float64}, 4, 4*(segment-1))      continuitySubMatrix     zeros(Complex{Float64}, 4, numRows-4*(segment-1)-8)  ]
 
-        #RHS Vector
+        #RHS Vector associated with point force
         for i = 1:4
-          RHS[2 + (segment-1)*4 + i] = (-s/v)^(i-1)*( P*exp(-s*tz.location/v)/abs(v)  )*(  Heaviside(-v)/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   ) - Heaviside(v)/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_right*s + tz.k_right   )   )*Heaviside((tz.location-xp)/v)
+          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*( P*exp(-s*xp/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   )
+          #RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( P*exp(-s*xp/v)/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + C0*s + k0   )   )
+
         end
-        #Add discontinuity in third derivative from point force.
-        RHS[2 + (segment-1)*4 + 4] += P/EI
+
 
 
         pointForceAdded = true
@@ -233,7 +235,7 @@ end
 #Inverts the Laplace transform using a basic quadrature method.
 function DirectQuadratureMethod(t, LaplaceFunction)
   sRadius = 10
-  sNum = 500
+  sNum = 100
   sStep = 2*sRadius/sNum
   sVals = 0.01*ones(sNum) + LinRange(-sRadius,sRadius,sNum)*1im
 
