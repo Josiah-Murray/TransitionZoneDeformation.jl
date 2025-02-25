@@ -1,4 +1,4 @@
-
+using WAV #To play a sound when computation finished
 
 include("Functions - MPF_ArbitraryTZs.jl")
 
@@ -14,7 +14,7 @@ const m = 48 #Mass per unit length of beam
 
 const xp = 0 #Starting position of point force
 
-const P = -10^4 #Force conveyed by point load #BUG force has negative effect for some reason. Missing negative probably.
+const P = -10^4 #Force conveyed by point load
 const v = 1 #Speed of point force
 
 
@@ -39,10 +39,10 @@ parameters = [EI, m, xp, xtz_list, P, v]
 #The time and space values for which I want an evaluation.
 xLeft = -1
 xRight = 5
-xNum = 100 #BUG Solution very sensitive to this value
+xNum = 100
 xVals = LinRange(xLeft,xRight,xNum)
 
-tMin = 0
+tMin = 1
 tMax = 5
 tNum = 100
 tVals = LinRange(tMin,tMax,tNum)
@@ -63,4 +63,11 @@ println("Finished calculating - Beginning graphing:")
 #||||||||||||||||#
 
 include("Graphing - MPF_ArbitraryTZs.jl")
+
+
+
+#Play sound when computation finished.
+y, fs = wavread(raw"C:/Windows/Media/Ring01.wav")
+wavplay(y, fs)
+
 println("ENDED")

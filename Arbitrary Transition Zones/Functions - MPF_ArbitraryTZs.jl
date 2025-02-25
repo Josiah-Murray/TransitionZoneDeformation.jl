@@ -48,11 +48,12 @@ function CalcDynamicDeformation(xVals,tVals, parameters)
     for ti in eachindex(tVals)
       t=tVals[ti]
 
-      #before = Base.gc_num()
-      #Solve for the deformation of the beam at each time and x value.
-      deformation = real( DirectQuadratureMethod(t, s-> LaplaceSpaceFunctionMovingPointForce1TZ(x,s,parameters)) )
-      #diff = Base.GC_Diff(Base.gc_num(),before)
-      #println(diff)
+
+      #deformation = real( DirectQuadratureMethod(t, s-> LaplaceSpaceFunctionMovingPointForce1TZ(x,s,parameters)) )
+
+      deformation = invertLaplace(x,t,LaplaceSpaceFunctionMovingPointForce1TZ, parameters)
+
+
 
       #Update the deformations matrix.
       deformations[ti,xi] = deformation
@@ -63,14 +64,27 @@ function CalcDynamicDeformation(xVals,tVals, parameters)
   return deformations
 end
 
+#A wrapper function which calls a particular laplace inversion implementation.
+#Change this function to change the iLaplace method.
+function invertLaplace(x,t,LaplaceSpaceFunction, parameters)
+  deformation = GaverStehfestImplementation(x,t,LaplaceSpaceFunction, parameters)
+  return deformation
+end
 
-
+#Implementation of the GWR algorithm from iLaplace package
+function GaverStehfestImplementation(x,t,LaplaceSpaceFunction, parameters)
+  ft = GWR( s -> real(LaplaceSpaceFunction(x,s,parameters)), 64 )
+  deformation = real( ft(t) )
+  return deformation
+end
 
 #The solution for the deformation in Laplace space.
 #Defined here so that it can be inverted elsewhere.
-function LaplaceSpaceFunctionMovingPointForce1TZ(x,s, parameters)#TODO Update function
+function LaplaceSpaceFunctionMovingPointForce1TZ(x,s, parameters)
   EI, m, xp, xtz_list, P, v = parameters
 
+  #Set the correct parameters.
+  #Default to the furthest right parameters, override if we are to the left.
   k = xtz_list[end].k_right
   C = xtz_list[end].C_right
   for tz in xtz_list
@@ -109,6 +123,8 @@ function Heaviside(x)
   end
 end
 
+
+#Roots of the characteristic equation
 function RValues(s, EI, m, C,k)
   r⁴ = -(m*s^2 + C*s + k)/EI
 
@@ -125,7 +141,7 @@ function RValues(s, EI, m, C,k)
 end
 
 
-#Solves for the undetermined coefficients
+#Solves for the undetermined coefficients and returns the correct set of 4 depending on the value of x
 function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
   #Type of xtz_list specified so that autocomplete works.
   EI, m, xp, xtz_list, P, v = parameters
@@ -217,8 +233,12 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
   LHSMatrix = [LHSMatrix; zeros(Complex{Float64},2, numRows - 4) [ 1 0 0 0 ; 0 0 0 1] ]
 
 
+  bVals = try
+    LHSMatrix\RHS
+  catch
+    println("s = ", s)
+  end
 
-  bVals = LHSMatrix\RHS
 
 
   if(!segmentFound)
@@ -231,6 +251,8 @@ end
 function TalbotMethod(tVal, LaplaceFunction)
   return "Not yet implemented." #//TODO Implement Talbot method or something else
 end
+
+
 
 #Inverts the Laplace transform using a basic quadrature method.
 function DirectQuadratureMethod(t, LaplaceFunction)
