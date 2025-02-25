@@ -13,16 +13,17 @@ ArrayToConvert = ArrayToConvert/(maximum(ArrayToConvert))
 
 
 num_tValues = size(ArrayToConvert)[1]
-num_tValues = 12
 num_xValues = size(ArrayToConvert)[2]
 
+img = zeros(Float64, num_xValues, pixelWidth)
 
-for ti in 10:num_tValues
+for ti in 1:num_tValues
   filepath = imgSeqFolderFilePath * "deformation_t_" * string(ti) * ".png"
-  img = ArrayToConvert[ti,:]
-  for i in 1:pixelWidth-1
-    img = [img ArrayToConvert]
-
+  img = zeros(Float64, num_xValues, pixelWidth)
+  for xi in 1:num_xValues
+    for i in 1:pixelWidth-1
+      img[xi,i] = ArrayToConvert[ti,xi]
+    end
   end
   save(filepath, img)
 end
