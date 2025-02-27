@@ -42,7 +42,7 @@ xRight = 5
 xNum = 100
 xVals = LinRange(xLeft,xRight,xNum)
 
-tMin = 1
+tMin = 0
 tMax = 5
 tNum = 100
 tVals = LinRange(tMin,tMax,tNum)
@@ -51,6 +51,10 @@ tVals = LinRange(tMin,tMax,tNum)
 #||||||||||||||||||||||||||||#
 #||--Finding the solution--||#
 #||||||||||||||||||||||||||||#
+
+#NOTE - To change the underlying Laplace inversion method,
+#change the implementation used in 'invertLaplace()'.
+
 
 #Calculate the deformation of the beam for given times and x values
 deformations = @time CalcDynamicDeformation(xVals,tVals, parameters)
