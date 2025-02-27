@@ -344,3 +344,50 @@ function DirectQuadratureMethod(t, LaplaceFunction)
 
   return f
 end
+
+
+
+using PolynomialRoots
+#This solution is found using the paper "Analytical Solutions for Euler-Bernoulli
+#Beam on Viscoelastic Foundation Subjected to Moving Load".
+function SteadyStateTravellingSolution(xVals, tVals, parameters, ks, C)
+  EI, m, xp, xtz_list, P, v = parameters
+
+
+  λ = (ks/(4*EI))^(1/4)
+  β = C/(2*sqrt(ks*m))
+  α = v/((4*ks*EI/(m^2))^(1/4))
+
+  η_Coefficients = [- α^2*β^2, 0, (α^4 - 1), 0,  2*α^2, 0, 1]
+  #η_Coefficients = [1, 0, 2*α^2, 0 ,(α^4 - 1), 0, - α^2*β^2, ]
+  η_list = roots(η_Coefficients)
+
+  #Find η in first segment
+  η = 0+0im;
+  for i in eachindex(η_list)
+      if abs(imag(η_list[i]))<0.000001 && real(η_list[i]) > 0
+              η = η_list[i]
+      else
+    end#else
+  end#for
+
+  wMinus(θ) = (P*λ/(2*ks))*(  ( η*exp( η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*(sin(sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ  ))
+  wPlus(θ) = (P*λ/(2*ks))*(  ( η*exp( -η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η - η^2) )*(sin(sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ  ))
+
+  deformations = zeros(length(tVals), length(xVals))
+
+  for xi in eachindex(xVals)
+    x=xVals[xi]
+    for ti in eachindex(tVals)
+      t=tVals[ti]
+      θ = x-v*t
+      if θ<0
+        deformations[ti,xi] = real(wMinus(θ))
+      else
+        deformations[ti,xi] = real(wPlus(θ))
+      end
+
+    end
+  end
+  return deformations
+end
