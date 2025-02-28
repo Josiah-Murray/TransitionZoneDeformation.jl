@@ -58,9 +58,15 @@ tVals = LinRange(tMin,tMax,tNum)
 
 #Calculate the deformation of the beam for given times and x values
 deformations = @time CalcDynamicDeformation(xVals,tVals, parameters)
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, 6.9*10^7, 10^7)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals,parameters, 2*6.9*10^7, 10^7)
+
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+
+
 println("Finished calculating - Beginning graphing:")
 ##
-
 
 #||||||||||||||||#
 #||--Graphing--||#
