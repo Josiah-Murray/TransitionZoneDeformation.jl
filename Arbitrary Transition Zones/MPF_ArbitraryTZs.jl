@@ -1,6 +1,8 @@
 using WAV #To play a sound when computation finished
 
+include("Functions - Inversion schemes.jl")
 include("Functions - MPF_ArbitraryTZs.jl")
+
 
 
 #|||||||||||||||||#
