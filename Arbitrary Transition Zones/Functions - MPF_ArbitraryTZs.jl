@@ -47,8 +47,8 @@ end
 #Change this function to change the iLaplace method.
 function invertLaplace(xVals,tVals,LaplaceSpaceFunction, parameters)
   #deformations = GaverStehfestImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
-  #deformations = directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
-  deformations = WeeksMethodImplementation(xVals, tVals, LaplaceSpaceFunction, parameters)
+  deformations = directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
+  #deformations = WeeksMethodImplementation(xVals, tVals, LaplaceSpaceFunction, parameters)
   return deformations
 end
 
@@ -332,14 +332,14 @@ end
 
 #Inverts the Laplace transform using a basic quadrature method.
 function DirectQuadratureMethod(t, LaplaceFunction)
-  sRadius = 10
+  sRadius = 50
   sNum = 100
   sStep = 2*sRadius/sNum
   sVals = 0.01*ones(sNum) + LinRange(-sRadius,sRadius,sNum)*1im
 
   f = 0
   for s in sVals
-    f += LaplaceFunction(s)*exp( s*t  )*sStep
+    f += 1/(2*pi)*LaplaceFunction(s)*exp( s*t  )*sStep #Should there be an i here?
   end
 
   return f
