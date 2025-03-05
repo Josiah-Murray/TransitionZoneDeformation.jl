@@ -36,10 +36,11 @@ end
 
 
 #Calculates the deformation of the beam in the model described above.
-function CalcDynamicDeformation(xVals,tVals, parameters)
+#Inversion method is one of the 'implementation' functions in "Functions - Inversion schemes.jl"
+function CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
 
 
-  deformations = invertLaplace(xVals, tVals, LaplaceSpaceFunctionMovingPointForce1TZ, parameters)
+  deformations = invertLaplace(xVals, tVals, LaplaceSpaceFunctionMovingPointForce1TZ, parameters, inversionMethod)
 
 
   return deformations
@@ -47,7 +48,7 @@ end
 
 #A wrapper function which calls a particular laplace inversion implementation.
 #Change this function to change the iLaplace method.
-function invertLaplace(xVals,tVals,LaplaceSpaceFunction, parameters)
+function invertLaplace(xVals,tVals,LaplaceSpaceFunction, parameters, inversionMethod)
   #deformations = GaverStehfestImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
   #deformations = directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
   deformations = WeeksMethodImplementation(xVals, tVals, LaplaceSpaceFunction, parameters)

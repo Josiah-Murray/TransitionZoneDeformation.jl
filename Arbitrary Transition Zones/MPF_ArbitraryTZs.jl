@@ -17,7 +17,7 @@ const m = 48 #Mass per unit length of beam
 const xp = 0 #Starting position of point force
 
 const P = -10^4 #Force conveyed by point load
-const v = 1 #Speed of point force
+const v = 30 #Speed of point force
 
 
 #||||||||||||||||||||||||#
@@ -26,7 +26,7 @@ const v = 1 #Speed of point force
 
 
 
-leftTZ = TransitionZone(2, 6.9*10^7, 2*6.9*10^7, 10^7, 10^7 )
+leftTZ = TransitionZone(2, 6.9*10^7, 2*6.9*10^7, 10^7, 2*10^7 )
 rightTZ = AddConsistentTZ(3, leftTZ, 6.9*10^7, 10^7)
 #anotherRight = AddConsistentTZ(4, rightTZ, 6.9*10^7, 2*10^7)
 xtz_list = [leftTZ, rightTZ]
@@ -45,7 +45,7 @@ xNum = 100
 xVals = LinRange(xLeft,xRight,xNum)
 
 tMin = 0
-tMax = 5
+tMax = 5/v
 tNum = 100
 tVals = LinRange(tMin,tMax,tNum)
 
@@ -59,12 +59,18 @@ tVals = LinRange(tMin,tMax,tNum)
 
 
 #Calculate the deformation of the beam for given times and x values
-deformations = @time CalcDynamicDeformation(xVals,tVals, parameters)
+inversionMethod = WeeksMethodImplementation
+inversionMethod = directQuadratureMethodImplementation
+deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
 
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, 6.9*10^7, 10^7)
 SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals,parameters, 2*6.9*10^7, 10^7)
 
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+
+
+
+
 
 
 println("Finished calculating - Beginning graphing:")
