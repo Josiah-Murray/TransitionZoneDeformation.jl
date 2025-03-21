@@ -39,7 +39,7 @@ end
 #Inversion method is one of the 'implementation' functions in "Functions - Inversion schemes.jl"
 function CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
 
-
+  println(inversionMethod)
   deformations = invertLaplace(xVals, tVals, LaplaceSpaceFunctionMovingPointForce1TZ, parameters, inversionMethod)
 
 
@@ -49,9 +49,7 @@ end
 #A wrapper function which calls a particular laplace inversion implementation.
 #Change this function to change the iLaplace method.
 function invertLaplace(xVals,tVals,LaplaceSpaceFunction, parameters, inversionMethod)
-  #deformations = GaverStehfestImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
-  #deformations = directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
-  deformations = WeeksMethodImplementation(xVals, tVals, LaplaceSpaceFunction, parameters)
+  deformations = inversionMethod(xVals, tVals, LaplaceSpaceFunction, parameters)
   return deformations
 end
 
@@ -272,4 +270,15 @@ function SteadyStateTravellingSolution(xVals, tVals, parameters, ks, C)
     end
   end
   return deformations
+end
+
+#Returns the critical velocity for a constant point force moving
+#with a fixed velocity on an purely elastic (i.e. undamped) foundation.
+#Kenney, J. T. (1954).
+#Steady-State Vibrations of Beam on Elastic Foundation for Moving Load.
+#Journal of Applied Mechanics, 21(4), 359–364.
+#https://doi.org/10.1115/1.4010934
+function CriticalVelocity(EI, m , k)
+  v_cr = (4*k*EI/(m^2))^(1/4)
+  return v_cr
 end
