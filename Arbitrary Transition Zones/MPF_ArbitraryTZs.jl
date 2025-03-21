@@ -17,7 +17,7 @@ const m = 48 #Mass per unit length of beam
 const xp = 0 #Starting position of point force
 
 const P = -10^4 #Force conveyed by point load
-const v = 30 #Speed of point force
+const v = 1 #Speed of point force
 
 
 #||||||||||||||||||||||||#
@@ -30,7 +30,7 @@ leftTZ = TransitionZone(2, 6.9*10^7, 2*6.9*10^7, 10^7, 2*10^7 )
 rightTZ = AddConsistentTZ(3, leftTZ, 6.9*10^7, 10^7)
 #anotherRight = AddConsistentTZ(4, rightTZ, 6.9*10^7, 2*10^7)
 xtz_list = [leftTZ, rightTZ]
-#xtz_list = [leftTZ]
+
 
 
 parameters = [EI, m, xp, xtz_list, P, v]
@@ -59,7 +59,7 @@ tVals = LinRange(tMin,tMax,tNum)
 
 
 #Calculate the deformation of the beam for given times and x values
-inversionMethod = WeeksMethodImplementation
+#inversionMethod = WeeksMethodImplementation
 inversionMethod = directQuadratureMethodImplementation
 deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
 
@@ -81,6 +81,8 @@ println("Finished calculating - Beginning graphing:")
 #||||||||||||||||#
 
 include("Graphing - MPF_ArbitraryTZs.jl")
+GifWithFeatures(deformations, xVals, tVals, parameters, SteadyStateDeformations)
+
 
 
 
