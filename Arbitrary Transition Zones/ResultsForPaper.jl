@@ -244,9 +244,64 @@ SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
 MultiPlotTimeEvolution(deformations, xVals, tVals, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, false, colour4, colour3)
 
-
+#||||||||||||||||||||||||||||||||||||||||||||||||||||||#
 #||--Gradual increase with lots of transition zones--||#
-#TODO:
+#||||||||||||||||||||||||||||||||||||||||||||||||||||||#
+
+
+#||--With Weeks--||#
+
+numTransitionZones = 4
+firstTZLocation = 0.4
+leftTZ = TransitionZone(firstTZLocation, k1, k1 + (k2-k1)/numTransitionZones, C1, C1 + (C2-C1)/numTransitionZones)
+xtz_list = [leftTZ]
+for i in 2:numTransitionZones
+  xtz_list = [xtz_list AddConsistentTZ(firstTZLocation + (xRight-firstTZLocation)*(i-1)/(numTransitionZones), xtz_list[end],k1+i*(k2-k1)/numTransitionZones, C1 + i*(C2-C1)/numTransitionZones)]
+end
+
+
+
+parameters= [EI, m, xp, xtz_list, P, v]
+
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k1, C1)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals,parameters, k2, C2)
+
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+
+MultiPlotTimeEvolution(deformations, xVals, tVals, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, false, colour4, colour3)
+
+#||--With direct quadrature--||#
+
+
+numTransitionZones = 4
+firstTZLocation = 0.5
+leftTZ = TransitionZone(firstTZLocation, k1, k1 + (k2-k1)/numTransitionZones, C1, C1 + (C2-C1)/numTransitionZones)
+xtz_list = [leftTZ]
+for i in 2:numTransitionZones
+  xtz_list = [xtz_list AddConsistentTZ(firstTZLocation + (xRight-firstTZLocation)*(i-1)/(numTransitionZones), xtz_list[end],k1+i*(k2-k1)/numTransitionZones, C1 + i*(C2-C1)/numTransitionZones)]
+end
+
+
+
+parameters= [EI, m, xp, xtz_list, P, v]
+
+laplaceParameters = [50,100]
+
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
+
+
+deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k1, C1)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals,parameters, k2, C2)
+
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+
+MultiPlotTimeEvolution(deformations, xVals, tVals, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, false, colour4, colour3)
 
 
 #Play sound when computation finished.

@@ -250,7 +250,7 @@ function MultiPlotTimeEvolution(data, xVals, tVals, tIndexes, parameters, steady
       end
     end
     p = plot!(framestyle=:box)
-    title!(string(string(tVals[ti])[1:4])) #TODO: Update how this works
+    title!(string(tVals[ti])) #TODO: Update how this works
     display(p)
   end
 
