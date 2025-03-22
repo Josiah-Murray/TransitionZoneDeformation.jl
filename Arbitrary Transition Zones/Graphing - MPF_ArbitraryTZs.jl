@@ -149,8 +149,6 @@ function GraphTimeEvolution(data, xVals, tVals, tIndexes, parameters, steadyStat
 
     gradLineColour = CustomGradient(i/length(tIndexes), colour1,colour2)
 
-    println(ti)
-
     p = plot!(xVals, data[ti,:], lc = gradLineColour, lw=4, ylimits = yLims, xlimits = (xLeft,xRight))
     if(steadyStateDeformations != false)
       for j in eachindex(SteadyStateDeformations)
