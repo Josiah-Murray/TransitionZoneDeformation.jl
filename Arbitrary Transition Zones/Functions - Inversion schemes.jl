@@ -32,36 +32,14 @@ end
 
 #Implementation of Weeks method using the iLaplace package
 function WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
-  deformations = zeros(length(tVals), length(xVals))
-
-  sigma0 = 0 #Right-most pole
-
-  #Weeks' parameters
-  #sigma = 0.01 + sigma0
-  #b = 2*(sigma-sigma0)
-  #N=1024
-
-
-  eps0 = 0.0002;
-  epsT = 0.001;
-  maxTime = tVals[end]
-
-  sigma = sigma0 + (1/maxTime)*log(epsT/eps0)
-  b = 2*(sigma-sigma0)
 
 
   for xi in eachindex(xVals)
     x=xVals[xi]
 
-    #Different x Values require different values of N.
-    b = 0.4 #Controls drop off at edges. Drop off lower for higher b
-    N_max = 1024 #Controls maximum number of terms in approximation
 
-    N = ( N_max*exp(-b*(x-  (xVals[1]+xVals[end])/2  )^2)  )
 
-    N = Int(round(N))
-
-    ft = Weeks( s -> LaplaceSpaceFunction(x,s,parameters), Int(N))
+    ft = Weeks( s -> LaplaceSpaceFunction(x,s,parameters))
 
 
 
@@ -83,6 +61,44 @@ function WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
   return deformations
 end
 
+#Implementation of Weeks method using the iLaplace package.
+#Adds the ability to specify a function N(x) which specifies the number of terms
+#to use in the Laguerre sum.
+function WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+
+
+  for xi in eachindex(xVals)
+    x=xVals[xi]
+
+    #Different x Values require different values of N.
+    #b = 0.4 #Controls drop off at edges. Drop off lower for higher b
+    #N_max = 1024 #Controls maximum number of terms in approximation
+
+    #N = ( N_max*exp(-b*(x-  (xVals[1]+xVals[end])/2  )^2)  )
+
+    #N = Int(round(N))
+
+    ft = Weeks( s -> LaplaceSpaceFunction(x,s,parameters), Int(N(x)))
+
+
+
+
+    for ti in eachindex(tVals)
+      t=tVals[ti]
+
+
+      deformation = real( ft(t) )
+
+
+      #Update the deformations matrix.
+      deformations[ti,xi] = deformation
+
+    end
+  end
+
+
+  return deformations
+end
 
 #Implementation of an unaccelerated direct quad. method
 function directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
@@ -106,6 +122,60 @@ function directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, 
 
   return deformations
 end
+
+#Implementation of an unaccelerated direct quad. with ability to specify quadrature details.
+function directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
+  deformations = zeros(length(tVals), length(xVals))
+
+  for xi in eachindex(xVals)
+    x=xVals[xi]
+    for ti in eachindex(tVals)
+      t=tVals[ti]
+
+
+      deformation = real( DirectQuadratureMethod(t, s-> LaplaceSpaceFunction(x,s,parameters), laplaceParameters) )
+
+
+      #Update the deformations matrix.
+      deformations[ti,xi] = deformation
+
+    end
+  end
+
+
+  return deformations
+end
+
+#Inverts the Laplace transform using a basic quadrature method.
+function DirectQuadratureMethod(t, LaplaceFunction)
+  sRadius = 50
+  sNum = 100
+  sStep = 2*sRadius/sNum
+  sVals = 0.01*ones(sNum) + LinRange(-sRadius,sRadius,sNum)*1im
+
+  f = 0
+  for s in sVals
+    f += 1/(2*pi)*LaplaceFunction(s)*exp( s*t  )*sStep #Should there be an i here?
+  end
+
+  return f
+end
+
+#Inverts the Laplace transform using a basic quadrature method with ability to specify
+#quadrature details.
+function DirectQuadratureMethod(t, LaplaceFunction, laplaceParameters)
+  sRadius, sNum = laplaceParameters
+  sStep = 2*sRadius/sNum
+  sVals = 0.01*ones(sNum) + LinRange(-sRadius,sRadius,sNum)*1im
+
+  f = 0
+  for s in sVals
+    f += 1/(2*pi)*LaplaceFunction(s)*exp( s*t  )*sStep #Should there be an i here?
+  end
+
+  return f
+end
+
 
 #Inverts the Laplace transform using a basic quadrature method.
 function DirectQuadratureMethod(t, LaplaceFunction)
