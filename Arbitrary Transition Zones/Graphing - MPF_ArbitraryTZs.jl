@@ -173,29 +173,3 @@ function GraphTimeEvolution(data, xVals, tVals, tIndexes, parameters, steadyStat
   p = plot!(framestyle=:box)
    display(p)
 end
-
-
-
-##
-#=
-#||||----Difference Graph----||||#
-
-difference1 = SteadyStateDeformations[1] - deformations
-difference2 = SteadyStateDeformations[2] - deformations
-
-@gif for ti in 1:tNum
-  p=plot()
-  for tz in xtz_list
-    p = vline!([tz.location],color=RGB(0.1,0.1,0.2), width=3, foreground_color=RGB(0.7,0.7,0.7), background_color=RGB(0.05,0.05,0.1), framestyle=:box)
-  end
-
-  p = vline!([v*(ti-1)*(tMax-tMin)/tNum + xp], width=3, color=RGB(0.3,0.3,0.4))
-  p = plot!(xVals, difference1[ti,:], lc=RGB(0.5,0.4,0.9), lw=3, ylimits = (-0.0001,0.0001), xlimits = (xLeft,xRight))
-  p = plot!(xVals, difference2[ti,:], lc=RGB(0.5,0.9,0.4), lw=3, ylimits = (-0.0001,0.0001), xlimits = (xLeft,xRight))
-
-
-
-  xlabel!("Beam coordinate (m)")
-  ylabel!("Deformation (m)")
-end
-=#
