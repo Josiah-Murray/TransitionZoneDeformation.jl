@@ -173,6 +173,23 @@ deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMe
 
 GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
 
+
+#NOTE: This still has good stability
+#=
+#||--N=4096--||#
+println("Weeks 1024")
+function N(x)
+  return 4096
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
+
+
+
+
+
+GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
+=#
 ##
 
 #||||||||||||||||||||||||||||||||||#
@@ -185,9 +202,9 @@ C1 = 10^7
 C2 = 2*C1
 v = 1
 
+#||--Up--||#
 
-
-leftTZ = TransitionZone(0.5, k1, k2, C1, C2)
+leftTZ = TransitionZone(0.4, k1, k2, C1, C2)
 xtz_list = [leftTZ]
 
 
@@ -198,21 +215,38 @@ function N(x)
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
 deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k, C)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k1, C1)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals,parameters, k2, C2)
 
-SteadyStateDeformations = [SteadyDeformation1]
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
+MultiPlotTimeEvolution(deformations, xVals, tVals, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, false, colour4, colour3)
 
-
-
-
-
-#GifWithFeatures(deformations, xVals, tVals, parameters, SteadyStateDeformations, false)
-
-#TODO: Change the way this is plotted.
-GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
+#||--And back down--||#
 
 
+leftTZ = TransitionZone(0.4, k1, k2, C1, C2)
+rightTZ = AddConsistentTZ(0.6, leftTZ, k1,C1)
+xtz_list = [leftTZ, rightTZ]
+
+
+parameters= [EI, m, xp, xtz_list, P, v]
+
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k1, C1)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals,parameters, k2, C2)
+
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+
+MultiPlotTimeEvolution(deformations, xVals, tVals, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, false, colour4, colour3)
+
+
+#||--Gradual increase with lots of transition zones--||#
+#TODO:
 
 
 #Play sound when computation finished.
