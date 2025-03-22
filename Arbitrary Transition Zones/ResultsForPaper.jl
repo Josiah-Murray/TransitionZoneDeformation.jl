@@ -1,7 +1,9 @@
 using WAV #To play a sound when computation finished
-
+using Plots
 include("Functions - Inversion schemes.jl")
 include("Functions - MPF_ArbitraryTZs.jl")
+include("Graphing - MPF_ArbitraryTZs.jl")
+
 
 #|||||||||||||||||#
 #||--Variables--||#
@@ -23,6 +25,26 @@ const P = -10^4 #Force conveyed by point load
 const xp = 0 #Starting position of point force
 
 
+const xLeft = 0
+const xRight = 1
+const xNum = 100
+const xVals = LinRange(xLeft,xRight,xNum)
+
+const tMin = 0
+const tMax = 1
+const tNum = 100
+const tVals = LinRange(tMin,tMax,tNum)
+
+colour1 = RGB(0.19215685, 0.27843137, 0.3333333)
+colour2 = RGB(0.14901960784313725, 0.6274509803921569, 0.8549019607843137)
+
+colour3 = RGB(0, 0.27450980392156865, 0.4980392156862745)
+colour4 = RGB(0.6470588235294118, 0.8, 0.5098039215686274)
+
+redLineColour = RGB(0.5,0.2,0.15)
+
+
+
 
 
 ##
@@ -31,49 +53,81 @@ const xp = 0 #Starting position of point force
 #||--Comparing to travelling wave--||#
 #||||||||||||||||||||||||||||||||||||#
 
+#=
+#An initial verification of the method
 
 k = 6.9*10^7
 C = 10^7
-
-v_cr = CriticalVelocity(EI, m, k) #~128 for this set of parameters
-
-v_sub = 100
-v_sup = 160
+v = 1
 
 
-leftTZ = TransitionZone(2, k, 2*k, C, 2*C)
+
+leftTZ = TransitionZone(xRight+1, k, k, C, C)
 xtz_list = [leftTZ]
 
 
-parameters_sub = [EI, m, xp, xtz_list, P, v_sub]
-parameters_sup = [EI, m, xp, xtz_list, P, v_sup]
+parameters= [EI, m, xp, xtz_list, P, v]
 
+laplaceParameters = [50,100]
 
-
-#||--Solution parameters--||#
-#The time and space values for which I want an evaluation.
-xLeft = 0
-xRight = 100
-xNum = 100
-xVals = LinRange(xLeft,xRight,xNum)
-
-tMin = 0
-tMax = xRight/v_sup
-tNum = 100
-tVals = LinRange(tMin,tMax,tNum)
-
-
-#inversionMethod = WeeksMethodImplementation
-inversionMethod = directQuadratureMethodImplementation
-deformations = @time CalcDynamicDeformation(xVals,tVals, parameters_sup, inversionMethod)
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters_sup, k, C)
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
+deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k, C)
 
 SteadyStateDeformations = [SteadyDeformation1]
 
 
 
-include("Graphing - MPF_ArbitraryTZs.jl")
-GifWithFeatures(deformations, xVals, tVals, parameters_sup, SteadyStateDeformations)
+
+
+
+#GifWithFeatures(deformations, xVals, tVals, parameters, SteadyStateDeformations, false)
+
+GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
+=#
+
+##
+
+#||||||||||||||||||||||||||||||||||||#
+#||--Comparing to travelling wave--||#
+#||||||||||||||||||||||||||||||||||||#
+
+#An initial verification of the method
+
+k = 6.9*10^7
+C = 10^7
+v = 1
+
+
+
+leftTZ = TransitionZone(xRight+1, k, k, C, C)
+xtz_list = [leftTZ]
+
+
+parameters= [EI, m, xp, xtz_list, P, v]
+
+laplaceParameters = [50,100]
+
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
+deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k, C)
+
+SteadyStateDeformations = [SteadyDeformation1]
+
+
+
+
+
+
+#GifWithFeatures(deformations, xVals, tVals, parameters, SteadyStateDeformations, false)
+
+GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
+
+
+
+
+
+
 
 
 #Play sound when computation finished.

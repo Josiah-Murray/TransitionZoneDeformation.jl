@@ -26,6 +26,42 @@ function GifWithFeatures(data, xVals, tVals, parameters, steadyStateDeformations
   xLeft = xVals[1]
   xRight = xVals[end]
 
+  #If y limits aren't specified, come up with some
+  if (yLims==false)
+    println("Automatic y limits:")
+    if (steadyStateDeformations!=false)
+      yLims = [Inf, -Inf]
+      for s in SteadyStateDeformations
+        s_max  = maximum(s)
+        s_min = minimum(s)
+        if s_min < yLims[1]
+          yLims[1] = maximum(s)
+        end
+        if s_max > yLims[2]
+          yLims[2] = s_max
+        end
+      end
+      def_max = maximum(deformations)
+      def_min = minimum(deformations)
+
+      if def_min < yLims[1]
+        yLims[1] = def_min
+      end
+      if def_max > yLims[2]
+        yLims[2] = def_max
+      end
+    else
+      yLims = [minimum(deformations), maximum(deformations)]
+    end
+
+    #Add some fraction of the height to top and bottom
+    height = yLims[2]-yLims[1]
+    fraction = 0.1
+    yLims = [yLims[1]-height*fraction, yLims[2] + height*fraction]
+
+    println(yLims)
+   end
+
   @gif for ti in 1:tNum
     p=plot()
     #plot lines for transition zones
@@ -36,12 +72,8 @@ function GifWithFeatures(data, xVals, tVals, parameters, steadyStateDeformations
     #Plot line for moving point force
     p = vline!([v*(ti-1)*(tMax-tMin)/tNum + xp], width=3, color=RGB(0.3,0.3,0.4))
 
-    #Plot graph, optionally specifying ylimits
-    if(ylims!=false)
-      p = plot!(xVals, data[ti,:], lc=RGB(0.5,0.4,0.9), lw=3, ylimits = (-0.0001,0.0001), xlimits = (xLeft,xRight))
-    else
-      p = plot!(xVals, data[ti,:], lc=RGB(0.5,0.4,0.9), lw=3,  xlimits = (xLeft,xRight))
-    end
+    #Plot graph
+    p = plot!(xVals, data[ti,:], lc=RGB(0.5,0.4,0.9), lw=3, ylimits = yLims, xlimits = (xLeft,xRight))
 
     #Optionally plot steady state solutions
     if(steadyStateDeformations != false)
@@ -55,7 +87,81 @@ function GifWithFeatures(data, xVals, tVals, parameters, steadyStateDeformations
 
 end
 
-println("Finished Graphing")
+
+#Takes an input between 0 and 1 and outputs a linearly interpolated (in rgb space)
+#colour between the two.
+function CustomGradient(input, colour1,colour2)
+
+  return colour1 + input*(colour2-colour1)
+
+end
+
+#For a set of tIndexes (should probably be no more than about 5?), plot each of the
+#relevant deformation profiles on the same graph.
+#If no desired ylims or steady states, set these values to false.
+function GraphTimeEvolution(data, xVals, tVals, tIndexes, parameters, steadyStateDeformations, yLims, colour1, colour2)
+
+  ~, ~, xp, tz_list, ~, v = parameters
+  tNum = length(tVals)
+  xLeft = xVals[1]
+  xRight = xVals[end]
+
+  #If y limits aren't specified, come up with some
+  if (yLims==false)
+    println("Automatic y limits:")
+    if (steadyStateDeformations!=false)
+      yLims = [Inf, -Inf]
+      for s in SteadyStateDeformations
+        s_max  = maximum(s)
+        s_min = minimum(s)
+        if s_min < yLims[1]
+          yLims[1] = maximum(s)
+        end
+        if s_max > yLims[2]
+          yLims[2] = s_max
+        end
+      end
+      def_max = maximum(deformations)
+      def_min = minimum(deformations)
+
+      if def_min < yLims[1]
+        yLims[1] = def_min
+      end
+      if def_max > yLims[2]
+        yLims[2] = def_max
+      end
+    else
+      yLims = [minimum(deformations), maximum(deformations)]
+    end
+
+    #Add some fraction of the height to top and bottom
+    height = yLims[2]-yLims[1]
+    fraction = 0.1
+    yLims = [yLims[1]-height*fraction, yLims[2] + height*fraction]
+
+    println(yLims)
+  end
+
+  p = plot()
+
+  for i in eachindex(tIndexes)
+    ti = reverse(tIndexes)[i]
+
+    gradLineColour = CustomGradient(i/length(tIndexes), colour1,colour2)
+
+    println(ti)
+
+    p = plot!(xVals, data[ti,:], lc = gradLineColour, lw=4, ylimits = yLims, xlimits = (xLeft,xRight))
+    if(steadyStateDeformations != false)
+      for j in eachindex(SteadyStateDeformations)
+        p = plot!(xVals, SteadyStateDeformations[j][ti,:], linestyle = :dash, color = RGB(0.5,0.2,0.15), lw=3.5)
+      end
+    end
+  end
+  p = plot!(framestyle=:box)
+   display(p)
+end
+
 
 
 ##
