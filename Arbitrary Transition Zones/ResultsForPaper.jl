@@ -91,12 +91,13 @@ GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyState
 #||||||||||||||||||||||||||||||||||||#
 #||--Comparing to travelling wave--||#
 #||||||||||||||||||||||||||||||||||||#
-
+println("Comparing to travelling wave")
 #An initial verification of the method
 
 k = 6.9*10^7
 C = 10^7
 v = 1
+
 
 
 
@@ -123,9 +124,93 @@ SteadyStateDeformations = [SteadyDeformation1]
 
 GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
 
+##
+
+#|||||||||||||||||||||||||||||||||||||||||||||#
+#||--Weeks method for travelling wave case--||#
+#|||||||||||||||||||||||||||||||||||||||||||||#
+
+
+k = 6.9*10^7
+C = 10^7
+v = 1
 
 
 
+leftTZ = TransitionZone(xRight+1, k, k, C, C)
+xtz_list = [leftTZ]
+
+
+parameters= [EI, m, xp, xtz_list, P, v]
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k, C)
+SteadyStateDeformations = [SteadyDeformation1]
+
+#||--N=512--||#
+println("Weeks 512")
+function N(x)
+  return 512
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
+
+
+
+GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
+
+
+#||--N=1024--||#
+println("Weeks 1024")
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
+
+
+
+
+
+GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
+
+##
+
+#||||||||||||||||||||||||||||||||||#
+#||--Including a transition zone--||#
+#||||||||||||||||||||||||||||||||||#
+
+k1 = 6.9*10^7
+k2 = 2*k1
+C1 = 10^7
+C2 = 2*C1
+v = 1
+
+
+
+leftTZ = TransitionZone(0.5, k1, k2, C1, C2)
+xtz_list = [leftTZ]
+
+
+parameters= [EI, m, xp, xtz_list, P, v]
+
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k, C)
+
+SteadyStateDeformations = [SteadyDeformation1]
+
+
+
+
+
+
+#GifWithFeatures(deformations, xVals, tVals, parameters, SteadyStateDeformations, false)
+
+#TODO: Change the way this is plotted.
+GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
 
 
 
