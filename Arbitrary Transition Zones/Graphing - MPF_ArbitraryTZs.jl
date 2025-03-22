@@ -144,10 +144,24 @@ function GraphTimeEvolution(data, xVals, tVals, tIndexes, parameters, steadyStat
 
   p = plot()
 
+  #plot lines for transition zones
+  for tz in tz_list
+    p = vline!([tz.location],color=RGB(0.8,0.8,0.9), width=3, framestyle=:box)
+  end
+
+
   for i in eachindex(tIndexes)
+
+
     ti = reverse(tIndexes)[i]
 
     gradLineColour = CustomGradient(i/length(tIndexes), colour1,colour2)
+
+    #Plot line for moving point force
+    p = vline!([v*(ti-1)*(tMax-tMin)/tNum + xp], width=1, color=gradLineColour+0*(RGB(1,1,1)-gradLineColour))
+
+
+
 
     p = plot!(xVals, data[ti,:], lc = gradLineColour, lw=4, ylimits = yLims, xlimits = (xLeft,xRight))
     if(steadyStateDeformations != false)
