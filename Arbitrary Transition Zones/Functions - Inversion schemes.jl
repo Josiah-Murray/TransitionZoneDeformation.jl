@@ -33,6 +33,7 @@ end
 #Implementation of Weeks method using the iLaplace package
 function WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
 
+  deformations = zeros(length(tVals), length(xVals))
 
   for xi in eachindex(xVals)
     x=xVals[xi]
@@ -65,7 +66,7 @@ end
 #Adds the ability to specify a function N(x) which specifies the number of terms
 #to use in the Laguerre sum.
 function WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-
+  deformations = zeros(length(tVals), length(xVals))
 
   for xi in eachindex(xVals)
     x=xVals[xi]
