@@ -344,7 +344,11 @@ function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, par
 
 end
 
-
+#Takes in a set of deformations defined for 10 time values and plots each time in a 5 by 2 grid.
+#Note that, when called in a file, the line `gr()` should be added first, else the formatting will be wrong.
+#For whatever reason, adding it to the function itself, doesn't help.
+#It also needs to be added before each call, not just once in the document.
+#As I have come to say often in my PhD, 'Everything is broken and I don't know why'.
 function Graph10Times(deformations, xVals, tVals, parameters, SteadyStateDeformations, ylims, colour, storageFolderPath, graphName)
   p_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xVals, tVals, 1:10, parameters, SteadyStateDeformations, ylims, colour, colour)
   p1 = plot(p_list[1:5]..., layout = grid(5,1), size = (1200,600))

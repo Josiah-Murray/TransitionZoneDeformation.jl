@@ -1,6 +1,5 @@
 using WAV #To play a sound when computation finished
 using Plots
-gr()#Otherwise plots wont save at the correct aspect ratio
 
 figurePath = "C:/Users/joemu/Documents/PhD/Julia/Moving Point Force/Figures/"
 
@@ -56,8 +55,7 @@ redLineColour = RGB(0.5,0.2,0.15)
 #||||||||||||||||||||||||||||||||||||#
 #||--Comparing to travelling wave--||#
 #||||||||||||||||||||||||||||||||||||#
-graphName = "ComparingToTravellingWaveDQ"
-println("graphName")
+
 #An initial verification of the method
 
 tVals10 = LinRange(tMin,tMax,10)
@@ -82,7 +80,8 @@ deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversion
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k, C)
 
 SteadyStateDeformations = [SteadyDeformation1]
-
+graphName = "ComparingToTravellingWaveDQ"
+gr()
 Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
 
 ##
@@ -116,6 +115,7 @@ end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
 deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
 graphName = "ComparingToTravellingWaveWeeks256"
+gr()
 Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
 
 
@@ -127,6 +127,7 @@ end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
 deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
 graphName = "ComparingToTravellingWaveWeeks1024"
+gr()
 Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
 
 
