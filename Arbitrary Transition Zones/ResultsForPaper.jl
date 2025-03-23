@@ -25,7 +25,7 @@ const P = -10^4 #Force conveyed by point load
 const xp = 0 #Starting position of point force
 
 
-const xLeft = 0
+const xLeft = -1
 const xRight = 1
 const xNum = 100
 const xVals = LinRange(xLeft,xRight,xNum)
@@ -277,19 +277,6 @@ MultiPlotTimeEvolution(deformations, xVals, tVals, [1,10,20,30,40,50,60,70,80,90
 
 #||--With direct quadrature--||#
 
-
-numTransitionZones = 4
-firstTZLocation = 0.5
-leftTZ = TransitionZone(firstTZLocation, k1, k1 + (k2-k1)/numTransitionZones, C1, C1 + (C2-C1)/numTransitionZones)
-xtz_list = [leftTZ]
-for i in 2:numTransitionZones
-  xtz_list = [xtz_list AddConsistentTZ(firstTZLocation + (xRight-firstTZLocation)*(i-1)/(numTransitionZones), xtz_list[end],k1+i*(k2-k1)/numTransitionZones, C1 + i*(C2-C1)/numTransitionZones)]
-end
-
-
-
-parameters= [EI, m, xp, xtz_list, P, v]
-
 laplaceParameters = [50,100]
 
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
@@ -302,6 +289,64 @@ SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals,parameters, k2, C
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
 MultiPlotTimeEvolution(deformations, xVals, tVals, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, false, colour4, colour3)
+
+
+
+#|||||||||||||||||||#
+#||--Two bridges--||#
+#|||||||||||||||||||#
+
+const xLeftLong = -1
+const xRightLong = 2
+const xNumLong = 200
+const xValsLong = LinRange(xLeftLong,xRightLong,xNumLong)
+
+const tMinLong = 0
+const tMaxLong = 2
+const tNumLong = 100
+const tValsLong = LinRange(tMinLong,tMaxLong,tNumLong)
+
+
+leftTZ = TransitionZone(0.4, k1, k2, C1, C2)
+tz2 = AddConsistentTZ(0.6, leftTZ, k1, C1)
+tz3 = AddConsistentTZ(1.4,tz2,k2,C2)
+tz4 = AddConsistentTZ(1.6, tz3, C1, k1)
+xtz_list = [leftTZ,tz2,tz3,tz4]
+
+#||--With Weeks--||#
+
+
+
+
+parameters= [EI, m, xp, xtz_list, P, v]
+
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+deformations = @time CalcDynamicDeformation(xValsLong,tValsLong, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xValsLong,tValsLong,parameters, k1, C1)
+SteadyDeformation2 = SteadyStateTravellingSolution(xValsLong,tValsLong,parameters, k2, C2)
+
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+
+#TODO Fix wrong point force location
+MultiPlotTimeEvolution(deformations, xValsLong, tValsLong, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, [-0.001,0.001], colour4, colour3)
+
+#||--With direct quadrature--||#
+
+laplaceParameters = [50,100]
+
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
+
+
+deformations = @time CalcDynamicDeformation(xValsLong,tValsLong, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xValsLong,tValsLong,parameters, k1, C1)
+SteadyDeformation2 = SteadyStateTravellingSolution(xValsLong,tValsLong,parameters, k2, C2)
+
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+
+MultiPlotTimeEvolution(deformations, xValsLong, tValsLong, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, [-0.001,0.001], colour4, colour3)
 
 
 #Play sound when computation finished.

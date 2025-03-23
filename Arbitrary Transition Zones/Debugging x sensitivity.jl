@@ -25,9 +25,9 @@ const P = -10^4 #Force conveyed by point load
 const xp = 0 #Starting position of point force
 
 
-const xLeft = 0
-const xRight = 1
-const xNum = 400
+const xLeft = -1
+const xRight = 10
+const xNum = 100
 const xVals = LinRange(xLeft,xRight,xNum)
 
 const tMin = 0
@@ -50,7 +50,7 @@ k1 = 6.9*10^7
 k2 = 2*k1
 C1 = 10^7
 C2 = 2*C1
-v = 1
+v = 10
 
 
 
@@ -67,15 +67,13 @@ for i in 2:numTransitionZones
 end
 
 
-xtz_list = xtz_list[1:2]
-
 parameters= [EI, m, xp, xtz_list, P, v]
 
 function N(x)
-  return 1024
+  return 256
 end
 #xValsTest = xVals[1:50]
-xValsTest = LinRange(0.31,0.325, 400)
+#xValsTest = LinRange(0.31,0.325, 400)
 xValsTest = xVals
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
 deformations = @time CalcDynamicDeformation(xValsTest,tVals, parameters, inversionMethod)
@@ -96,7 +94,8 @@ println("ENDED")
 
 
 
-#Testing against finite difference
+#=
+#||--Testing against finite difference--||#
 
 #returns the central difference approximation of order 2 for the fourth derivative.
 #Takes in a 1D array and a centre index i
@@ -147,3 +146,4 @@ tIndexes = 1:length(deformations[:,1])-4
 plot(tVals[tIndexes], xVals[xIndexes],L, st=:surface)
 
 plot(L, st=:surface)
+=#
