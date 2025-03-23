@@ -321,7 +321,7 @@ function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, par
     gradLineColour = CustomGradient(i/length(tIndexes), colour2,colour1)
 
     #Plot line for moving point force
-    p = vline!([v*(ti-1)*(tMax-tMin)/tNum + xp], width=1, color=gradLineColour+0*(RGB(1,1,1)-gradLineColour))
+    p = vline!([v*(tVals[i]) + xp], width=3, color=gradLineColour+0*(RGB(1,1,1)-gradLineColour))
 
 
 
@@ -333,10 +333,24 @@ function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, par
       end
     end
     p = plot!(framestyle=:box)
-    title!(string(tVals[ti])) #TODO: Update how this works
+    title!(string(round(tVals[ti], digits=3))*" s" , titlefontsize = 12,line=-10)
+    xlabel!("Beam coordinate (m)", xguidefontsize=10)
+    ylabel!("Deformation (m)", yguidefontsize=10)
+
     p_list = [p_list; p]
   end
 
   return p_list
 
+end
+
+
+function Graph10Times(deformations, xVals, tVals, parameters, SteadyStateDeformations, ylims, colour, storageFolderPath, graphName)
+  p_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xVals, tVals, 1:10, parameters, SteadyStateDeformations, ylims, colour, colour)
+  p1 = plot(p_list[1:5]..., layout = grid(5,1), size = (1200,600))
+  p2 = plot(p_list[6:10]..., layout = grid(5,1), size = (1200,600))
+  p = plot(p1,p2, layout = grid(1,2), size = (1200,1200),leftmargin=10Plots.mm)
+  display(p)
+  savefig(p, storageFolderPath*graphName*".png")
+  savefig(p, storageFolderPath*graphName*".pdf")
 end

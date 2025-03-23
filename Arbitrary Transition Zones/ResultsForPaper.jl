@@ -1,5 +1,9 @@
 using WAV #To play a sound when computation finished
 using Plots
+gr()#Otherwise plots wont save at the correct aspect ratio
+
+figurePath = "C:/Users/joemu/Documents/PhD/Julia/Moving Point Force/Figures/"
+
 include("Functions - Inversion schemes.jl")
 include("Functions - MPF_ArbitraryTZs.jl")
 include("Graphing - MPF_ArbitraryTZs.jl")
@@ -91,8 +95,11 @@ GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyState
 #||||||||||||||||||||||||||||||||||||#
 #||--Comparing to travelling wave--||#
 #||||||||||||||||||||||||||||||||||||#
-println("Comparing to travelling wave")
+graphName = "ComparingToTravellingWaveDQ"
+println("graphName")
 #An initial verification of the method
+
+tVals10 = LinRange(tMin,tMax,10)
 
 k = 6.9*10^7
 C = 10^7
@@ -110,8 +117,8 @@ parameters= [EI, m, xp, xtz_list, P, v]
 laplaceParameters = [50,100]
 
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
-deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k, C)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k, C)
 
 SteadyStateDeformations = [SteadyDeformation1]
 
@@ -122,7 +129,17 @@ SteadyStateDeformations = [SteadyDeformation1]
 
 #GifWithFeatures(deformations, xVals, tVals, parameters, SteadyStateDeformations, false)
 
-GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
+GraphTimeEvolution(deformations, xVals, tVals10, 1:10, parameters, SteadyStateDeformations, false, colour4, colour3)
+
+#=
+p_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xVals, tVals10, 1:10, parameters, SteadyStateDeformations, false, colour4, colour3)
+p1 = plot(p_list[1:5]..., layout = grid(5,1), size = (1200,600))
+p2 = plot(p_list[6:10]..., layout = grid(5,1), size = (1200,600))
+p = plot(p1,p2, layout = grid(1,2), size = (1200,1200),leftmargin=10Plots.mm)
+savefig(p, figurePath*"ComparingToTravellingWaveDQ.png")
+savefig(p, figurePath*"ComparingToTravellingWaveDQ.pdf")
+=#
+Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, false, colour2, figurePath, graphName)
 
 ##
 
@@ -331,8 +348,8 @@ SteadyDeformation2 = SteadyStateTravellingSolution(xValsLong,tValsLong,parameter
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
 #TODO Fix wrong point force location
-MultiPlotTimeEvolution(deformations, xValsLong, tValsLong, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, [-0.001,0.001], colour4, colour3)
-
+plot_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xValsLong, tValsLong, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, [-0.001,0.001], colour4, colour3)
+plot(plot_list[1:10]..., layout = grid(5,2), size=(1200,1000))
 #||--With direct quadrature--||#
 
 laplaceParameters = [50,100]
