@@ -186,7 +186,7 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
     rr1, rr2, rr3, rr4 = RValues(s,EI,m, tz.C_right, tz.k_right)
     continuitySubMatrix = [-exp(lr1*tz.location)  -exp(lr2*tz.location) -exp(lr3*tz.location) -exp(lr4*tz.location) exp(rr1*tz.location)  exp(rr2*tz.location) exp(rr3*tz.location) exp(rr4*tz.location)]
     for i = 1:3
-      continuitySubMatrix = [continuitySubMatrix; -lr1^i*1exp(lr1*tz.location)  -lr2^i*exp(lr2*x) -lr3^i*exp(lr3*tz.location) -lr4^i*exp(lr4*tz.location) rr1^i*exp(rr1*tz.location)  rr2^i*exp(rr2*tz.location) rr3^i*exp(rr3*tz.location) rr4^i*exp(rr4*tz.location) ]
+      continuitySubMatrix = [continuitySubMatrix; -lr1^i*1exp(lr1*tz.location)  -lr2^i*exp(lr2*tz.location) -lr3^i*exp(lr3*tz.location) -lr4^i*exp(lr4*tz.location) rr1^i*exp(rr1*tz.location)  rr2^i*exp(rr2*tz.location) rr3^i*exp(rr3*tz.location) rr4^i*exp(rr4*tz.location) ]
     end
     LHSMatrix = [LHSMatrix;     zeros(Complex{Float64}, 4, 4*(segment-1))      continuitySubMatrix     zeros(Complex{Float64}, 4, numRows-4*(segment-1)-8)  ]
 
