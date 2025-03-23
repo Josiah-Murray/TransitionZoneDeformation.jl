@@ -256,7 +256,7 @@ firstTZLocation = 0.4
 leftTZ = TransitionZone(firstTZLocation, k1, k1 + (k2-k1)/numTransitionZones, C1, C1 + (C2-C1)/numTransitionZones)
 xtz_list = [leftTZ]
 for i in 2:numTransitionZones
-  xtz_list = [xtz_list AddConsistentTZ(firstTZLocation + (xRight-firstTZLocation)*(i-1)/(numTransitionZones), xtz_list[end],k1+i*(k2-k1)/numTransitionZones, C1 + i*(C2-C1)/numTransitionZones)]
+  global xtz_list = [xtz_list AddConsistentTZ(firstTZLocation + (xRight-firstTZLocation)*(i-1)/(numTransitionZones), xtz_list[end],k1+i*(k2-k1)/numTransitionZones, C1 + i*(C2-C1)/numTransitionZones)]
 end
 
 
