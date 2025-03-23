@@ -56,45 +56,6 @@ redLineColour = RGB(0.5,0.2,0.15)
 #||||||||||||||||||||||||||||||||||||#
 #||--Comparing to travelling wave--||#
 #||||||||||||||||||||||||||||||||||||#
-
-#=
-#An initial verification of the method
-
-k = 6.9*10^7
-C = 10^7
-v = 1
-
-
-
-leftTZ = TransitionZone(xRight+1, k, k, C, C)
-xtz_list = [leftTZ]
-
-
-parameters= [EI, m, xp, xtz_list, P, v]
-
-laplaceParameters = [50,100]
-
-inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
-deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k, C)
-
-SteadyStateDeformations = [SteadyDeformation1]
-
-
-
-
-
-
-#GifWithFeatures(deformations, xVals, tVals, parameters, SteadyStateDeformations, false)
-
-GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
-=#
-
-##
-
-#||||||||||||||||||||||||||||||||||||#
-#||--Comparing to travelling wave--||#
-#||||||||||||||||||||||||||||||||||||#
 graphName = "ComparingToTravellingWaveDQ"
 println("graphName")
 #An initial verification of the method
@@ -122,30 +83,14 @@ SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k, 
 
 SteadyStateDeformations = [SteadyDeformation1]
 
-
-
-
-
-
-#GifWithFeatures(deformations, xVals, tVals, parameters, SteadyStateDeformations, false)
-
-GraphTimeEvolution(deformations, xVals, tVals10, 1:10, parameters, SteadyStateDeformations, false, colour4, colour3)
-
-#=
-p_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xVals, tVals10, 1:10, parameters, SteadyStateDeformations, false, colour4, colour3)
-p1 = plot(p_list[1:5]..., layout = grid(5,1), size = (1200,600))
-p2 = plot(p_list[6:10]..., layout = grid(5,1), size = (1200,600))
-p = plot(p1,p2, layout = grid(1,2), size = (1200,1200),leftmargin=10Plots.mm)
-savefig(p, figurePath*"ComparingToTravellingWaveDQ.png")
-savefig(p, figurePath*"ComparingToTravellingWaveDQ.pdf")
-=#
-Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, false, colour2, figurePath, graphName)
+Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
 
 ##
 
 #|||||||||||||||||||||||||||||||||||||||||||||#
 #||--Weeks method for travelling wave case--||#
 #|||||||||||||||||||||||||||||||||||||||||||||#
+
 
 
 k = 6.9*10^7
@@ -160,20 +105,18 @@ xtz_list = [leftTZ]
 
 parameters= [EI, m, xp, xtz_list, P, v]
 
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k, C)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k, C)
 SteadyStateDeformations = [SteadyDeformation1]
 
-#||--N=512--||#
-println("Weeks 512")
+#||--N=256--||#
+println("Weeks 256")
 function N(x)
-  return 512
+  return 256
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
-
-
-
-GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+graphName = "ComparingToTravellingWaveWeeks256"
+Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
 
 
 #||--N=1024--||#
@@ -182,32 +125,11 @@ function N(x)
   return 1024
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+graphName = "ComparingToTravellingWaveWeeks1024"
+Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
 
 
-
-
-
-GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
-
-
-#NOTE: This still has good stability
-#=
-#||--N=4096--||#
-println("Weeks 1024")
-function N(x)
-  return 4096
-end
-inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
-
-
-
-
-
-GraphTimeEvolution(deformations, xVals, tVals, 1:10:100, parameters, SteadyStateDeformations, false, colour4, colour3)
-=#
-##
 
 #||||||||||||||||||||||||||||||||||#
 #||--Including a transition zone--||#
