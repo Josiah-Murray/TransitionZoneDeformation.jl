@@ -310,7 +310,7 @@ const tValsLong = LinRange(tMinLong,tMaxLong,tNumLong)
 leftTZ = TransitionZone(0.4, k1, k2, C1, C2)
 tz2 = AddConsistentTZ(0.6, leftTZ, k1, C1)
 tz3 = AddConsistentTZ(1.4,tz2,k2,C2)
-tz4 = AddConsistentTZ(1.6, tz3, C1, k1)
+tz4 = AddConsistentTZ(1.6, tz3, k1, C1)
 xtz_list = [leftTZ,tz2,tz3,tz4]
 
 #||--With Weeks--||#

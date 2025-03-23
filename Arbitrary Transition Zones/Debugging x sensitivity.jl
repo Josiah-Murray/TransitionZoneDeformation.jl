@@ -25,13 +25,14 @@ const P = -10^4 #Force conveyed by point load
 const xp = 0 #Starting position of point force
 
 
-const xLeft = -1
-const xRight = 10
+
+const xLeft = 0
+const xRight = 3
 const xNum = 100
 const xVals = LinRange(xLeft,xRight,xNum)
 
 const tMin = 0
-const tMax = 1
+const tMax = 2
 const tNum = 100
 const tVals = LinRange(tMin,tMax,tNum)
 
@@ -50,39 +51,44 @@ k1 = 6.9*10^7
 k2 = 2*k1
 C1 = 10^7
 C2 = 2*C1
-v = 10
+v = 1
 
 
 
+
+leftTZ = TransitionZone(0.4, k1, k2, C1, C2)
+tz2 = AddConsistentTZ(0.6, leftTZ, k1, C1)
+tz3 = AddConsistentTZ(1.4,tz2,k2,C2)
+tz4 = AddConsistentTZ(1.6, tz3, k1, C1)
+xtz_list = [leftTZ,tz2,tz3,tz4]
 
 
 #||--With Weeks--||#
-
-numTransitionZones = 4
-firstTZLocation = 0.4
-leftTZ = TransitionZone(firstTZLocation, k1, k1 + (k2-k1)/numTransitionZones, C1, C1 + (C2-C1)/numTransitionZones)
-xtz_list = [leftTZ]
-for i in 2:numTransitionZones
-  global xtz_list = [xtz_list AddConsistentTZ(firstTZLocation + (xRight-firstTZLocation)*(i-1)/(numTransitionZones), xtz_list[end],k1+i*(k2-k1)/numTransitionZones, C1 + i*(C2-C1)/numTransitionZones)]
-end
 
 
 parameters= [EI, m, xp, xtz_list, P, v]
 
 function N(x)
-  return 256
+  return 1024
 end
 #xValsTest = xVals[1:50]
 #xValsTest = LinRange(0.31,0.325, 400)
 xValsTest = xVals
+
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+
+
+#laplaceParameters = [50,100]
+#inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
+
+
 deformations = @time CalcDynamicDeformation(xValsTest,tVals, parameters, inversionMethod)
 SteadyDeformation1 = SteadyStateTravellingSolution(xValsTest,tVals,parameters, k1, C1)
 SteadyDeformation2 = SteadyStateTravellingSolution(xValsTest,tVals,parameters, k2, C2)
 
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
-MultiPlotTimeEvolution(deformations, xValsTest, tVals, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, false, colour4, colour3)
+MultiPlotTimeEvolution(deformations, xValsTest, tVals, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, [-0.001,0.001], colour4, colour3)
 
 
 #Play sound when computation finished.
