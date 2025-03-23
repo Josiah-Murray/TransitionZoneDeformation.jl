@@ -255,3 +255,88 @@ function MultiPlotTimeEvolution(data, xVals, tVals, tIndexes, parameters, steady
   end
 
 end
+
+
+#For a set of tIndexes (should probably be no more than about 5?), plot each of the
+#relevant deformation profiles on the same graph.
+#If no desired ylims or steady states, set these values to false.
+function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, parameters, steadyStateDeformations, yLims, colour1, colour2)
+
+  ~, ~, xp, tz_list, ~, v = parameters
+  tNum = length(tVals)
+  xLeft = xVals[1]
+  xRight = xVals[end]
+
+  #If y limits aren't specified, come up with some
+  if (yLims==false)
+    println("Automatic y limits:")
+    if (steadyStateDeformations!=false)
+      yLims = [Inf, -Inf]
+      for s in SteadyStateDeformations
+        s_max  = maximum(s)
+        s_min = minimum(s)
+        if s_min < yLims[1]
+          yLims[1] = maximum(s)
+        end
+        if s_max > yLims[2]
+          yLims[2] = s_max
+        end
+      end
+      def_max = maximum(deformations)
+      def_min = minimum(deformations)
+
+      if def_min < yLims[1]
+        yLims[1] = def_min
+      end
+      if def_max > yLims[2]
+        yLims[2] = def_max
+      end
+    else
+      yLims = [minimum(deformations), maximum(deformations)]
+    end
+
+    #Add some fraction of the height to top and bottom
+    height = yLims[2]-yLims[1]
+    fraction = 0.1
+    yLims = [yLims[1]-height*fraction, yLims[2] + height*fraction]
+
+    println(yLims)
+  end
+
+
+
+
+
+  p_list = []
+
+  for i in eachindex(tIndexes)
+    p = plot()
+    #plot lines for transition zones
+    for tz in tz_list
+      p = vline!([tz.location],color=RGB(0.8,0.8,0.9), width=3, framestyle=:box)
+    end
+
+    ti = tIndexes[i]
+
+    gradLineColour = CustomGradient(i/length(tIndexes), colour2,colour1)
+
+    #Plot line for moving point force
+    p = vline!([v*(ti-1)*(tMax-tMin)/tNum + xp], width=1, color=gradLineColour+0*(RGB(1,1,1)-gradLineColour))
+
+
+
+
+    p = plot!(xVals, data[ti,:], lc = gradLineColour, lw=4, ylimits = yLims, xlimits = (xLeft,xRight))
+    if(steadyStateDeformations != false)
+      for j in eachindex(SteadyStateDeformations)
+        p = plot!(xVals, SteadyStateDeformations[j][ti,:], linestyle = :dash, color = RGB(0.5,0.2,0.15), lw=3.5)
+      end
+    end
+    p = plot!(framestyle=:box)
+    title!(string(tVals[ti])) #TODO: Update how this works
+    p_list = [p_list; p]
+  end
+
+  return p_list
+
+end
