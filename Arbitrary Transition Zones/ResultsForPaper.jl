@@ -289,6 +289,76 @@ SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 MultiPlotTimeEvolution(deformations, xValsLong, tValsLong, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, [-0.001,0.001], colour4, colour3)
 
 
+#||||||||||||||||||||||||||||#
+#||--Numerical assessment--||#
+#||||||||||||||||||||||||||||#
+
+#||--Full case--||#
+const xLeft_Full = -10
+const xRight_Full = 120
+const xNum_Full = 100
+const xVals_Full = LinRange(xLeft_Full,xRight_Full,xNum_Full)
+
+const tMin_Full = 0
+const tMax_Full = 4
+const tNum_Full = 100
+const tVals_Full = LinRange(tMin_Full,tMax_Full,tNum_Full)
+
+tVals10_Full = LinRange(tMin_Full,tMax_Full,10)
+
+k = 6.9*10^7
+C = 10^7
+v = 30
+
+
+
+leftTZ = TransitionZone(xRight_Full+1, k, k, C, C)
+xtz_list = [leftTZ]
+
+
+parameters= [EI, m, xp, xtz_list, P, v]
+
+
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+inversionMethod = WeeksMethodImplementation
+deformations = @time CalcDynamicDeformation(xVals_Full,tVals10_Full, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_Full,tVals10_Full,parameters, k, C)
+
+SteadyStateDeformations = [SteadyDeformation1]
+graphName = "ComparingToTravellingWaveDQ"
+gr()
+Graph10Times(deformations,xVals_Full,tVals10_Full,parameters,SteadyStateDeformations, false, colour2, figurePath, graphName)
+#[-0.000035,0.000015]
+
+
+#||---Non-dimensional--||#
+
+xNF = 1/(xRight_Full-xLeft_Full)
+
+leftTZ_ND = TransitionZone(xRight_Full*xNF+1, k, k, C, C)
+
+parameters_ND = [EI*xNF^4, m, xp, xtz_list, 1, v*xNF]
+xVals_ND = LinRange(xLeft_Full*xNF,xRight_Full*xNF ,xNum_Full)
+tVals10_ND = LinRange(tMin_Full,tMax_Full,10)
+
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+inversionMethod = WeeksMethodImplementation
+deformations = @time CalcDynamicDeformation(xVals_ND,tVals10_ND, parameters_ND, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_ND,tVals10_ND,parameters_ND, k, C)
+
+SteadyStateDeformations = [SteadyDeformation1]
+graphName = "ComparingToTravellingWaveDQ"
+gr()
+Graph10Times(deformations,xVals_ND,tVals10_ND,parameters_ND,SteadyStateDeformations, false, colour2, figurePath, graphName)
+#[-0.000035,0.000015]
+
+
 #Play sound when computation finished.
 y, fs = wavread(raw"C:/Windows/Media/Ring01.wav")
 wavplay(y, fs)
