@@ -7,7 +7,7 @@ include("Functions - Inversion schemes.jl")
 include("Functions - MPF_ArbitraryTZs.jl")
 include("Graphing - MPF_ArbitraryTZs.jl")
 
-
+#MARK: Variables
 #|||||||||||||||||#
 #||--Variables--||#
 #|||||||||||||||||#
@@ -51,7 +51,7 @@ redLineColour = RGB(0.5,0.2,0.15)
 
 
 ##
-
+#MARK: Verification
 #||||||||||||||||||||||||||||||||||||#
 #||--Comparing to travelling wave--||#
 #||||||||||||||||||||||||||||||||||||#
@@ -130,7 +130,7 @@ graphName = "ComparingToTravellingWaveWeeks1024"
 gr()
 Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
 
-
+#MARK: Transition zones
 
 #||||||||||||||||||||||||||||||||||#
 #||--Including a transition zone--||#
@@ -270,7 +270,6 @@ SteadyDeformation2 = SteadyStateTravellingSolution(xValsLong,tValsLong,parameter
 
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
-#TODO Fix wrong point force location
 plot_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xValsLong, tValsLong, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, [-0.001,0.001], colour4, colour3)
 plot(plot_list[1:10]..., layout = grid(5,2), size=(1200,1000))
 #||--With direct quadrature--||#
@@ -289,18 +288,20 @@ SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 MultiPlotTimeEvolution(deformations, xValsLong, tValsLong, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, [-0.001,0.001], colour4, colour3)
 
 
+#MARK: Numerical stuff
+
 #||||||||||||||||||||||||||||#
 #||--Numerical assessment--||#
 #||||||||||||||||||||||||||||#
 
 #||--Full case--||#
-const xLeft_Full = -10
-const xRight_Full = 120
+const xLeft_Full = 0
+const xRight_Full = 30
 const xNum_Full = 100
 const xVals_Full = LinRange(xLeft_Full,xRight_Full,xNum_Full)
 
 const tMin_Full = 0
-const tMax_Full = 4
+const tMax_Full = 1
 const tNum_Full = 100
 const tVals_Full = LinRange(tMin_Full,tMax_Full,tNum_Full)
 
@@ -312,7 +313,7 @@ v = 30
 
 
 
-leftTZ = TransitionZone(xRight_Full+1, k, k, C, C)
+leftTZ = TransitionZone(10, k, k, C, C)
 xtz_list = [leftTZ]
 
 
@@ -330,34 +331,12 @@ SteadyDeformation1 = SteadyStateTravellingSolution(xVals_Full,tVals10_Full,param
 SteadyStateDeformations = [SteadyDeformation1]
 graphName = "ComparingToTravellingWaveDQ"
 gr()
-Graph10Times(deformations,xVals_Full,tVals10_Full,parameters,SteadyStateDeformations, false, colour2, figurePath, graphName)
+Graph10Times(deformations,xVals_Full,tVals10_Full,parameters,SteadyStateDeformations, [-0.00005,0.00005], colour2, figurePath, graphName)
 #[-0.000035,0.000015]
 
 
-#||---Non-dimensional--||#
 
-xNF = 1/(xRight_Full-xLeft_Full)
-
-leftTZ_ND = TransitionZone(xRight_Full*xNF+1, k, k, C, C)
-
-parameters_ND = [EI*xNF^4, m, xp, xtz_list, 1, v*xNF]
-xVals_ND = LinRange(xLeft_Full*xNF,xRight_Full*xNF ,xNum_Full)
-tVals10_ND = LinRange(tMin_Full,tMax_Full,10)
-
-function N(x)
-  return 1024
-end
-inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-inversionMethod = WeeksMethodImplementation
-deformations = @time CalcDynamicDeformation(xVals_ND,tVals10_ND, parameters_ND, inversionMethod)
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals_ND,tVals10_ND,parameters_ND, k, C)
-
-SteadyStateDeformations = [SteadyDeformation1]
-graphName = "ComparingToTravellingWaveDQ"
-gr()
-Graph10Times(deformations,xVals_ND,tVals10_ND,parameters_ND,SteadyStateDeformations, false, colour2, figurePath, graphName)
-#[-0.000035,0.000015]
-
+#MARK: Play sound
 
 #Play sound when computation finished.
 y, fs = wavread(raw"C:/Windows/Media/Ring01.wav")
