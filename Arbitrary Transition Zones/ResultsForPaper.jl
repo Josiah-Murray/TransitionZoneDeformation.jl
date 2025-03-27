@@ -1,3 +1,4 @@
+sqrt(-1) #So that I don't accidentally run all the code at once.
 using WAV #To play a sound when computation finished
 using Plots
 
@@ -38,6 +39,8 @@ const tMax = 1
 const tNum = 100
 const tVals = LinRange(tMin,tMax,tNum)
 
+const tVals10 = LinRange(tMin,tMax,10)
+
 colour1 = RGB(0.19215685, 0.27843137, 0.3333333)
 colour2 = RGB(0.14901960784313725, 0.6274509803921569, 0.8549019607843137)
 
@@ -58,7 +61,6 @@ redLineColour = RGB(0.5,0.2,0.15)
 
 #An initial verification of the method
 
-tVals10 = LinRange(tMin,tMax,10)
 
 k = 6.9*10^7
 C = 10^7
@@ -136,6 +138,8 @@ Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.
 #||--Including a transition zone--||#
 #||||||||||||||||||||||||||||||||||#
 
+#TODO: Shade region of higher stiffness
+
 k1 = 6.9*10^7
 k2 = 2*k1
 C1 = 10^7
@@ -154,19 +158,21 @@ function N(x)
   return 1024
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k1, C1)
-SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals,parameters, k2, C2)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k1, C1)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k2, C2)
 
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+graphName = "TransitionZonex0p4Weeks1024"
+gr()
+Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
 
-MultiPlotTimeEvolution(deformations, xVals, tVals, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, false, colour4, colour3)
 
 #||--And back down--||#
 
 
-leftTZ = TransitionZone(0.4, k1, k2, C1, C2)
-rightTZ = AddConsistentTZ(0.6, leftTZ, k1,C1)
+leftTZ = TransitionZone(0.3, k1, k2, C1, C2)
+rightTZ = AddConsistentTZ(0.7, leftTZ, k1,C1)
 xtz_list = [leftTZ, rightTZ]
 
 
@@ -176,13 +182,15 @@ function N(x)
   return 1024
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k1, C1)
-SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals,parameters, k2, C2)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k1, C1)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k2, C2)
 
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
-MultiPlotTimeEvolution(deformations, xVals, tVals, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, false, colour4, colour3)
+graphName = "TransitionZonex0p40p6Weeks1024"
+gr()
+Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
 
 #||||||||||||||||||||||||||||||||||||||||||||||||||||||#
 #||--Gradual increase with lots of transition zones--||#
@@ -192,7 +200,7 @@ MultiPlotTimeEvolution(deformations, xVals, tVals, [1,10,20,30,40,50,60,70,80,90
 #||--With Weeks--||#
 
 numTransitionZones = 4
-firstTZLocation = 0.4
+firstTZLocation = 0.3
 leftTZ = TransitionZone(firstTZLocation, k1, k1 + (k2-k1)/numTransitionZones, C1, C1 + (C2-C1)/numTransitionZones)
 xtz_list = [leftTZ]
 for i in 2:numTransitionZones
@@ -207,13 +215,15 @@ function N(x)
   return 1024
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k1, C1)
-SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals,parameters, k2, C2)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k1, C1)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k2, C2)
 
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
-MultiPlotTimeEvolution(deformations, xVals, tVals, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, false, colour4, colour3)
+graphName = "GradualTransitionZoneWeeks1024"
+gr()
+Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
 
 #||--With direct quadrature--||#
 
@@ -222,14 +232,15 @@ laplaceParameters = [50,100]
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
 
 
-deformations = @time CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals,parameters, k1, C1)
-SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals,parameters, k2, C2)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k1, C1)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k2, C2)
 
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
-MultiPlotTimeEvolution(deformations, xVals, tVals, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, false, colour4, colour3)
-
+graphName = "GradualTransitionZoneDQ"
+gr()
+Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
 
 
 #|||||||||||||||||||#
@@ -245,6 +256,7 @@ const tMinLong = 0
 const tMaxLong = 2
 const tNumLong = 100
 const tValsLong = LinRange(tMinLong,tMaxLong,tNumLong)
+const tVals10Long = LinRange(tMinLong,tMaxLong, 10)
 
 
 leftTZ = TransitionZone(0.4, k1, k2, C1, C2)
@@ -264,14 +276,16 @@ function N(x)
   return 1024
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-deformations = @time CalcDynamicDeformation(xValsLong,tValsLong, parameters, inversionMethod)
-SteadyDeformation1 = SteadyStateTravellingSolution(xValsLong,tValsLong,parameters, k1, C1)
-SteadyDeformation2 = SteadyStateTravellingSolution(xValsLong,tValsLong,parameters, k2, C2)
+deformations = @time CalcDynamicDeformation(xValsLong,tVals10Long, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xValsLong,tVals10Long,parameters, k1, C1)
+SteadyDeformation2 = SteadyStateTravellingSolution(xValsLong,tVals10Long,parameters, k2, C2)
 
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
-plot_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xValsLong, tValsLong, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, [-0.001,0.001], colour4, colour3)
-plot(plot_list[1:10]..., layout = grid(5,2), size=(1200,1000))
+graphName = "GradualTransitionZoneWeeks1024"
+gr()
+Graph10Times(deformations,xValsLong,tVals10Long,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
+
 #||--With direct quadrature--||#
 
 laplaceParameters = [50,100]
@@ -279,13 +293,15 @@ laplaceParameters = [50,100]
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
 
 
-deformations = @time CalcDynamicDeformation(xValsLong,tValsLong, parameters, inversionMethod)
-SteadyDeformation1 = SteadyStateTravellingSolution(xValsLong,tValsLong,parameters, k1, C1)
-SteadyDeformation2 = SteadyStateTravellingSolution(xValsLong,tValsLong,parameters, k2, C2)
+deformations = @time CalcDynamicDeformation(xValsLong,tVals10Long, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xValsLong,tVals10Long,parameters, k1, C1)
+SteadyDeformation2 = SteadyStateTravellingSolution(xValsLong,tVals10Long,parameters, k2, C2)
 
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
-MultiPlotTimeEvolution(deformations, xValsLong, tValsLong, [1,10,20,30,40,50,60,70,80,90,100], parameters, SteadyStateDeformations, [-0.001,0.001], colour4, colour3)
+graphName = "GradualTransitionZoneDQ"
+gr()
+Graph10Times(deformations,xValsLong,tVals10Long,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, figurePath, graphName)
 
 
 #MARK: Numerical stuff
@@ -294,7 +310,7 @@ MultiPlotTimeEvolution(deformations, xValsLong, tValsLong, [1,10,20,30,40,50,60,
 #||--Numerical assessment--||#
 #||||||||||||||||||||||||||||#
 
-#||--Full case--||#
+#||--More realistic case--||#
 const xLeft_Full = 0
 const xRight_Full = 30
 const xNum_Full = 100
@@ -313,7 +329,7 @@ v = 30
 
 
 
-leftTZ = TransitionZone(10, k, k, C, C)
+leftTZ = TransitionZone(10, k, 2*k, C, 2*C)
 xtz_list = [leftTZ]
 
 
@@ -325,11 +341,52 @@ function N(x)
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
 inversionMethod = WeeksMethodImplementation
+
+laplaceParameters = [50,100]
+
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
+
 deformations = @time CalcDynamicDeformation(xVals_Full,tVals10_Full, parameters, inversionMethod)
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals_Full,tVals10_Full,parameters, k, C)
 
 SteadyStateDeformations = [SteadyDeformation1]
-graphName = "ComparingToTravellingWaveDQ"
+graphName = "LongIntervalWeeks1024"
+gr()
+Graph10Times(deformations,xVals_Full,tVals10_Full,parameters,SteadyStateDeformations, [-0.00005,0.00005], colour2, figurePath, graphName)
+#[-0.000035,0.000015]
+
+
+#||--High DQ parameters--||#
+
+k = 6.9*10^7
+C = 10^7
+v = 30
+
+
+
+leftTZ = TransitionZone(5, k, 2*k, C, 2*C)
+rightTZ = AddConsistentTZ(10,leftTZ,2*k,2*C)
+xtz_list = [leftTZ]
+
+
+parameters= [EI, m, xp, xtz_list, P, v]
+
+
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+inversionMethod = WeeksMethodImplementation
+
+laplaceParameters = [200,4000]
+
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
+
+deformations = @time CalcDynamicDeformation(xVals_Full,tVals10_Full, parameters, inversionMethod)
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_Full,tVals10_Full,parameters, k, C)
+
+SteadyStateDeformations = [SteadyDeformation1]
+graphName = "LongIntervalWeeks1024"
 gr()
 Graph10Times(deformations,xVals_Full,tVals10_Full,parameters,SteadyStateDeformations, [-0.00005,0.00005], colour2, figurePath, graphName)
 #[-0.000035,0.000015]
