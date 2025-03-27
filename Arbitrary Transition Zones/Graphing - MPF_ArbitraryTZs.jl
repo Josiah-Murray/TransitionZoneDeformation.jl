@@ -321,12 +321,12 @@ function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, par
     gradLineColour = CustomGradient(i/length(tIndexes), colour2,colour1)
 
     #Plot line for moving point force
-    p = vline!([v*(tVals[i]) + xp], width=3, color=gradLineColour+0*(RGB(1,1,1)-gradLineColour))
+    p = vline!([v*(tVals[i]) + xp], width=3, color=colour2)
 
 
 
 
-    p = plot!(xVals, data[ti,:], lc = gradLineColour, lw=4, ylimits = yLims, xlimits = (xLeft,xRight))
+    p = plot!(xVals, data[ti,:], lc = colour1, lw=4, ylimits = yLims, xlimits = (xLeft,xRight))
     if(steadyStateDeformations != false)
       for j in eachindex(SteadyStateDeformations)
         p = plot!(xVals, SteadyStateDeformations[j][ti,:], linestyle = :dash, color = RGB(0.5,0.2,0.15), lw=3.5)
@@ -349,8 +349,8 @@ end
 #For whatever reason, adding it to the function itself, doesn't help.
 #It also needs to be added before each call, not just once in the document.
 #As I have come to say often in my PhD, 'Everything is broken and I don't know why'.
-function Graph10Times(deformations, xVals, tVals, parameters, SteadyStateDeformations, ylims, colour, storageFolderPath, graphName)
-  p_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xVals, tVals, 1:10, parameters, SteadyStateDeformations, ylims, colour, colour)
+function Graph10Times(deformations, xVals, tVals, parameters, SteadyStateDeformations, ylims, colour1, colour2, storageFolderPath, graphName)
+  p_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xVals, tVals, 1:10, parameters, SteadyStateDeformations, ylims, colour1, colour2)
   p1 = plot(p_list[1:5]..., layout = grid(5,1), size = (1200,600))
   p2 = plot(p_list[6:10]..., layout = grid(5,1), size = (1200,600))
   p = plot(p1,p2, layout = grid(1,2), size = (1200,1200),leftmargin=10Plots.mm)
