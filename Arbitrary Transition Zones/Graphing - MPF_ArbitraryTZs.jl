@@ -126,6 +126,10 @@ function colourGraphSegment(p, tz_list, xLeft, xRight, ylims, colour1, colour2)
     C_min = min(C_min, tz.C_left)
   end
 
+  if(k_min == k_max)
+    k_max = 2*k_max
+  end
+
 
 
   colour = CustomGradient(  (tz_list[1].k_left - k_min)/( k_max - k_min ), colour1, colour2  )
