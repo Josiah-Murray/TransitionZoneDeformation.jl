@@ -428,6 +428,7 @@ gr()
 Graph10Times(deformations,xVals_Full,tVals10_Full,parameters,SteadyStateDeformations, [-0.000035,0.000035], colour2, colour1, figurePath, graphName)
 #[-0.000035,0.000015]
 
+#= Doesn't run
 #||--BigFloat Weeks--||#
 
 k = 6.9*10^7
@@ -457,7 +458,7 @@ graphName = "LongIntervalWeeks1024_BF"
 gr()
 Graph10Times(deformations,xVals_Full,tVals10_Full,parameters,SteadyStateDeformations, [-0.000035,0.000035], colour2, colour1, figurePath, graphName)
 #[-0.000035,0.000015]
-
+=#
 
 #||--BigFloat Finer parameters--||#
 
