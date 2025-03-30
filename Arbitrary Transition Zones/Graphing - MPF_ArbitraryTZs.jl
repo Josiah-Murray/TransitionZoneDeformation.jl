@@ -18,6 +18,8 @@ function PlotSteadyStates(p, ti, SteadyStateDeformations)
   return p
 end
 
+
+
 #Data should be an array with data[t, x]
 function GifWithFeatures(data, xVals, tVals, parameters, steadyStateDeformations = false, yLims = false)
 
@@ -88,11 +90,63 @@ function GifWithFeatures(data, xVals, tVals, parameters, steadyStateDeformations
 end
 
 
-#Takes an input between 0 and 1 and outputs a linearly interpolated (in rgb space)
+#Takes an input between 0 and 1 (or outside that, if you wanna be fancy) and outputs a linearly interpolated (in rgb space)
 #colour between the two.
 function CustomGradient(input, colour1,colour2)
 
-  return colour1 + input*(colour2-colour1)
+  colour1Array = [Float64(colour1.r), Float64(colour1.g), Float64(colour1.b)]
+  colour2Array = [Float64(colour2.r), Float64(colour2.g), Float64(colour2.b)]
+  colourArray = colour1Array + input*(colour2Array-colour1Array)
+
+  colour_clamp = RGB(map(x-> clamp(x,0,1), colourArray)...)
+
+  return colour_clamp
+
+end
+
+#Function which colours in the background of the graph based on the foundation stiffness in that region.
+function colourGraphSegment(p, tz_list, xLeft, xRight, ylims, colour1, colour2)
+
+
+  k_max = 0
+  C_max = 0
+  for tz in tz_list
+    k_max = max(k_max, tz.k_left)
+    k_max = max(k_max, tz.k_right)
+    C_max = max(C_max, tz.C_left)
+    C_max = max(C_max, tz.C_left)
+  end
+
+  k_min = Inf
+  C_min = Inf
+  for tz in tz_list
+    k_min = min(k_min, tz.k_left)
+    k_min = min(k_min, tz.k_right)
+    C_min = min(C_min, tz.C_left)
+    C_min = min(C_min, tz.C_left)
+  end
+
+
+
+  colour = CustomGradient(  (tz_list[1].k_left - k_min)/( k_max - k_min ), colour1, colour2  )
+  p = plot!(Shape( [ (xLeft,ylims[1]), (tz_list[1].location, ylims[1]),(tz_list[1].location, ylims[2]), (xLeft,ylims[2])    ]), color=colour)
+
+  if(length(tz_list)>1)
+    for i in eachindex(tz_list[1:end-1])
+
+      colour = CustomGradient(  (tz_list[i].k_right - k_min)/( k_max - k_min ), colour1, colour2  )
+
+
+      #p = plot!(Shape( [ (xLeft,ylims[1]), (tz_list[1].location, ylims[1]),(tz_list[1].location, ylims[2]), (xLeft,ylims[2])    ]), color=colour1)
+
+      p = plot!(Shape( [ (tz_list[i].location,ylims[1]), (tz_list[i+1].location, ylims[1]),(tz_list[i+1].location, ylims[2]), (tz_list[i].location,ylims[2])    ]), color=colour)
+
+    end
+  end
+
+  colour = CustomGradient(  (tz_list[end].k_right - k_min)/( k_max - k_min ), colour1, colour2  )
+  p = plot!(Shape( [ (xRight,ylims[1]), (tz_list[end].location, ylims[1]),(tz_list[end].location, ylims[2]), (xRight,ylims[2])    ]), color=colour)
+
 
 end
 
@@ -144,9 +198,10 @@ function GraphTimeEvolution(data, xVals, tVals, tIndexes, parameters, steadyStat
 
   p = plot()
 
+
   #plot lines for transition zones
   for tz in tz_list
-    p = vline!([tz.location],color=RGB(0.8,0.8,0.9), width=3, framestyle=:box)
+    p = vline!([tz.location],color=RGB(0,0,0), width=1, framestyle=:box)
   end
 
 
@@ -256,11 +311,14 @@ function MultiPlotTimeEvolution(data, xVals, tVals, tIndexes, parameters, steady
 
 end
 
-
+#MARK: Main function
 #For a set of tIndexes (should probably be no more than about 5?), plot each of the
 #relevant deformation profiles on the same graph.
 #If no desired ylims or steady states, set these values to false.
 function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, parameters, steadyStateDeformations, yLims, colour1, colour2)
+
+  backgroundColour_min = RGB(0.9,0.9,0.95)
+  backgroundColour_max = RGB(0.7,0.7,0.8)
 
   ~, ~, xp, tz_list, ~, v = parameters
   tNum = length(tVals)
@@ -311,9 +369,13 @@ function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, par
 
   for i in eachindex(tIndexes)
     p = plot()
+
+    #Colour in background for transition zones
+    colourGraphSegment(p,tz_list, xLeft, xRight, yLims, backgroundColour_min, backgroundColour_max)
+
     #plot lines for transition zones
     for tz in tz_list
-      p = vline!([tz.location],color=RGB(0.8,0.8,0.9), width=3, framestyle=:box)
+      p = vline!([tz.location],color=RGB(0,0,0), width=1, framestyle=:box)
     end
 
     ti = tIndexes[i]
