@@ -321,8 +321,11 @@ end
 #If no desired ylims or steady states, set these values to false.
 function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, parameters, steadyStateDeformations, yLims, colour1, colour2)
 
-  backgroundColour_min = RGB(0.9,0.9,0.95)
-  backgroundColour_max = RGB(0.7,0.7,0.8)
+  #backgroundColour_min = RGB(0.9,0.9,0.95)
+  #backgroundColour_max = RGB(0.7,0.7,0.8)
+  backgroundColour_min = RGB(0.95,0.9,0.9)
+  backgroundColour_max = RGB(0.8,0.7,0.7)
+
 
   ~, ~, xp, tz_list, ~, v = parameters
   tNum = length(tVals)
