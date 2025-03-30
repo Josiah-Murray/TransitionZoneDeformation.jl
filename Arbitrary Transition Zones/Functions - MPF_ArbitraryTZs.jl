@@ -161,7 +161,7 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
 
         #RHS Vector associated with point force
         for i = 1:4
-          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*( P*exp(-s*xp/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   )
+          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*( P  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   )
           #RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( P*exp(-s*xp/v)/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + C0*s + k0   )   )
 
         end
