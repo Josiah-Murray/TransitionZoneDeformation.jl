@@ -217,6 +217,11 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
     println("s = ", s)
   end
 
+  bVals[2] = 0
+  bVals[3] = 0
+  bVals[end] = 0
+  bVals[end-3]=0
+
 
 
   if(!segmentFound)
