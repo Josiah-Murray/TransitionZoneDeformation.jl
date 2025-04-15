@@ -398,7 +398,7 @@ function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, par
     p = plot!(xVals, data[ti,:], lc = colour1, lw=4, ylimits = yLims, xlimits = (xLeft,xRight))
     if(steadyStateDeformations != false)
       for j in eachindex(SteadyStateDeformations)
-        p = plot!(xVals, SteadyStateDeformations[j][ti,:], linestyle = :dash, color = RGB(0.5,0.2,0.15), lw=3.5)
+        p = plot!(xVals, SteadyStateDeformations[j][ti,:], linestyle = :dash, color = RGB(0.5,0.2,0.15), lw=2.5)
       end
     end
     p = plot!(framestyle=:box)
