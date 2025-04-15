@@ -52,9 +52,10 @@ v = 30
 
 
 
-leftTZ = TransitionZone(-5, k, 2*k, C, 2*C)
+leftTZ = TransitionZone(5, k, 2*k, C, 2*C)
 rightTZ = AddConsistentTZ(10,leftTZ,k,C)
 xtz_list = [leftTZ, rightTZ]
+xtz_list = [leftTZ]
 
 
 parameters= [EI, m, xp, xtz_list, P, v]
@@ -66,7 +67,7 @@ inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadr
 #||--N=1024--||#
 println("Weeks 128")
 function N(x)
-  return 128
+  return 1028
 end
 #inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
 
