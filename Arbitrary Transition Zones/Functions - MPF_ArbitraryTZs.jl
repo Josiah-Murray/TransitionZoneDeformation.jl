@@ -284,6 +284,63 @@ function SteadyStateTravellingSolution(xVals, tVals, parameters, ks, C)
   return deformations
 end
 
+#This solution is found using the paper "Analytical Solutions for Euler-Bernoulli
+#Beam on Viscoelastic Foundation Subjected to Moving Load".
+function SteadyStateDerivativeTravellingSolution(xVals, tVals, parameters, ks, C)
+  EI, m, xp, xtz_list, P, v = parameters
+
+
+  λ = (ks/(4*EI))^(1/4)
+  β = C/(2*sqrt(ks*m))
+  α = v/((4*ks*EI/(m^2))^(1/4))
+  β_cr = (1/α)*sqrt(2/27)*(2*α^2 + sqrt(3+α^4))*(-α^2+sqrt(3+α^4))
+
+  η_Coefficients = [- α^2*β^2, 0, (α^4 - 1), 0,  2*α^2, 0, 1]
+  #η_Coefficients = [1, 0, 2*α^2, 0 ,(α^4 - 1), 0, - α^2*β^2, ]
+  η_list = roots(η_Coefficients)
+
+  #Find η in first segment
+  η = 0+0im;
+  for i in eachindex(η_list)
+      if abs(imag(η_list[i]))<0.000001 && real(η_list[i]) > 0
+              η = η_list[i]
+      else
+    end#else
+  end#for
+
+  #wMinusDash(θ) = (P*λ/(2*ks))*(  ( η*exp( η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*(sin(sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ  ))
+  wMinusDash(θ) = (P*λ/(2*ks))*(  ( -v*η^2*λ*exp( η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*(sin(sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ  )) -v*sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*(P*λ/(2*ks))*(  ( η*exp( η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*(cos(sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) - sin( sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ  ))
+
+  #wPlusDash(θ) = (P*λ/(2*ks))*(  ( η*exp( -η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η - η^2) )*(sin(sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ  ))
+  wPlusDash(θ) = (P*λ/(2*ks))*(  ( -v*η^2*λ*exp( -η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η - η^2) )*(sin(sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ  )) -  v*sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*  (P*λ/(2*ks))*(  ( η*exp( -η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η - η^2) )*(cos(sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) - sin( sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ  ))
+
+
+  wMinusCriticalDash(θ) = (P*λ/(2*ks))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*( -v*(η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*exp( (η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  ) + v*(η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*exp( (η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  )    )/  ( 2*η*sqrt(abs(2*α^2 + η^2 - 2*(α*β/η) )) )  + ( -v*(η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*exp( (η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  ) -v*(η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ* exp( (η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  ) )/2)
+  slopes = zeros(length(tVals), length(xVals))
+
+  for xi in eachindex(xVals)
+    x=xVals[xi]
+    for ti in eachindex(tVals)
+      t=tVals[ti]
+      θ = x-xp-v*t
+      if θ<0
+        if(β<β_cr)
+          slopes[ti,xi] = real(wMinusDash(θ))
+        else
+          slopes[ti,xi] = real(wMinusCriticalDash(θ))
+        end
+
+      else
+        slopes[ti,xi] = real(wPlusDash(θ))
+      end
+
+    end
+  end
+  return slopes
+end
+
+
+
 #Returns the critical velocity for a constant point force moving
 #with a fixed velocity on an purely elastic (i.e. undamped) foundation.
 #Kenney, J. T. (1954).
