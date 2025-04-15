@@ -215,7 +215,8 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
   catch
     println("s = ", s)
   end
-
+  #bVals[1] = 0#BUG
+  #bVals[4] = 0#BUG
   bVals[2] = 0
   bVals[3] = 0
   bVals[end] = 0
@@ -261,6 +262,9 @@ function SteadyStateTravellingSolution(xVals, tVals, parameters, ks, C)
 
 
   wMinusCritical(θ) = (P*λ/(2*ks))*(  ( η*exp( η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*(sinh(sqrt(abs(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ ) /  ( η*sqrt(abs(2*α^2 + η^2 - 2*(α*β/η) )) ) ) + cosh( sqrt(abs(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  ))
+  wMinusCritical(θ) = (P*λ/(2*ks))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*(  exp( (η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  ) - exp( (η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  )    )/  ( 2*η*sqrt(abs(2*α^2 + η^2 - 2*(α*β/η) )) )  + ( exp( (η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  ) + exp( (η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  ) )/2)
+  #wMinusCritical(θ) = (  exp( (η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ ) + exp( (η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   )*λ*θ ) )    )
+  #wMinusCritical(θ) = 1/2 + ((α*β/η + η^2)/( 2*η*sqrt(abs(2*α^2 + η^2 - 2*(α*β/η) )) ))
   deformations = zeros(length(tVals), length(xVals))
 
   for xi in eachindex(xVals)
