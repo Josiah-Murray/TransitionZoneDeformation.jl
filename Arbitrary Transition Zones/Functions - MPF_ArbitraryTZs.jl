@@ -83,8 +83,7 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x,s, parameters)
 
   #||--Construct Laplace-space function--||#
 
-  ŷ = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + (P/abs(v))*(exp(-s*x/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C*s + k )  )*Heaviside((x-xp)/v)
-
+  ŷ = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + (P/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C*s + k )  )*Heaviside((x-xp)/v)
 
   return ŷ
 
@@ -161,7 +160,7 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
 
         #RHS Vector associated with point force
         for i = 1:4
-          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*( P  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   )
+          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*( P  )*(  1/( abs(v)*( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )  )  )
           #RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( P*exp(-s*xp/v)/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + C0*s + k0   )   )
 
         end
@@ -242,6 +241,7 @@ function SteadyStateTravellingSolution(xVals, tVals, parameters, ks, C)
   λ = (ks/(4*EI))^(1/4)
   β = C/(2*sqrt(ks*m))
   α = v/((4*ks*EI/(m^2))^(1/4))
+  β_cr = (1/α)*sqrt(2/27)*(2*α^2 + sqrt(3+α^4))*(-α^2+sqrt(3+α^4))
 
   η_Coefficients = [- α^2*β^2, 0, (α^4 - 1), 0,  2*α^2, 0, 1]
   #η_Coefficients = [1, 0, 2*α^2, 0 ,(α^4 - 1), 0, - α^2*β^2, ]
@@ -259,15 +259,22 @@ function SteadyStateTravellingSolution(xVals, tVals, parameters, ks, C)
   wMinus(θ) = (P*λ/(2*ks))*(  ( η*exp( η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*(sin(sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ  ))
   wPlus(θ) = (P*λ/(2*ks))*(  ( η*exp( -η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η - η^2) )*(sin(sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ  ))
 
+
+  wMinusCritical(θ) = (P*λ/(2*ks))*(  ( η*exp( η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*(sinh(sqrt(abs(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ ) /  ( η*sqrt(abs(2*α^2 + η^2 - 2*(α*β/η) )) ) ) + cosh( sqrt(abs(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  ))
   deformations = zeros(length(tVals), length(xVals))
 
   for xi in eachindex(xVals)
     x=xVals[xi]
     for ti in eachindex(tVals)
       t=tVals[ti]
-      θ = x-v*t
+      θ = x-xp-v*t
       if θ<0
-        deformations[ti,xi] = real(wMinus(θ))
+        if(β<β_cr)
+          deformations[ti,xi] = real(wMinus(θ))
+        else
+          deformations[ti,xi] = real(wMinusCritical(θ))
+        end
+
       else
         deformations[ti,xi] = real(wPlus(θ))
       end

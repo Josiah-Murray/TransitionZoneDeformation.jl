@@ -83,10 +83,10 @@ laplaceParameters = [50,100]
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
 
 graphName = "ComparingToTravellingWaveDQ"
-#deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
-#save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
-deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
 
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k, C)
 SteadyStateDeformations = [SteadyDeformation1]
@@ -124,11 +124,11 @@ function N(x)
   return 256
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-#deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
 graphName = "ComparingToTravellingWaveWeeks256"
-#save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
-deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
 
 
 
@@ -142,11 +142,11 @@ function N(x)
   return 1024
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-#deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
 graphName = "ComparingToTravellingWaveWeeks1024"
-#save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
-deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
 
 
 
@@ -179,11 +179,11 @@ function N(x)
   return 1024
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-#deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
 graphName = "TransitionZonex0p4Weeks1024"
-#save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
-deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
 
 
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k1, C1)
@@ -209,11 +209,11 @@ function N(x)
   return 1024
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-#deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
 graphName = "TransitionZonex0p40p6Weeks1024"
-#save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
-deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
 
 
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k1, C1)
@@ -252,11 +252,11 @@ function N(x)
   return 1024
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-#deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
 graphName = "GradualTransitionZoneWeeks1024"
-#save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
-deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
 
 
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k1, C1)
@@ -275,12 +275,12 @@ laplaceParameters = [50,100]
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
 
 
-#deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
+deformations = @time CalcDynamicDeformation(xVals,tVals10, parameters, inversionMethod)
 
 graphName = "GradualTransitionZoneDQ"
-#save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
-deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
 
 
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k1, C1)
@@ -325,12 +325,12 @@ function N(x)
   return 1024
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-#deformations = @time CalcDynamicDeformation(xValsLong,tVals10Long, parameters, inversionMethod)
+deformations = @time CalcDynamicDeformation(xValsLong,tVals10Long, parameters, inversionMethod)
 
 graphName = "TwoBridges1024"
-#save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
-deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
 
 
 SteadyDeformation1 = SteadyStateTravellingSolution(xValsLong,tVals10Long,parameters, k1, C1)
@@ -349,11 +349,11 @@ laplaceParameters = [50,100]
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
 
 
-#deformations = @time CalcDynamicDeformation(xValsLong,tVals10Long, parameters, inversionMethod)
+deformations = @time CalcDynamicDeformation(xValsLong,tVals10Long, parameters, inversionMethod)
 graphName = "TwoBridgesDQ"
-#save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
-deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
 
 
 
@@ -374,7 +374,7 @@ Graph10Times(deformations,xValsLong,tVals10Long,parameters,SteadyStateDeformatio
 #||||||||||||||||||||||||||||#
 
 #||--More realistic case--||#
-const xLeft_Full = 0
+const xLeft_Full = -10
 const xRight_Full = 30
 const xNum_Full = 100
 const xVals_Full = LinRange(xLeft_Full,xRight_Full,xNum_Full)
@@ -404,11 +404,11 @@ function N(x)
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
 
-#deformations = @time CalcDynamicDeformation(xVals_Full,tVals10_Full, parameters, inversionMethod)
+deformations = @time CalcDynamicDeformation(xVals_Full,tVals10_Full, parameters, inversionMethod)
 graphName = "LongIntervalWeeks1024"
-#save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
-deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
 
 
 
@@ -424,7 +424,7 @@ Graph10Times(deformations,xVals_Full,tVals10_Full,parameters,SteadyStateDeformat
 
 
 
-#MARK: BigFloat
+
 #||--For comparison with BigFloat stuff--||#
 
 k = 6.9*10^7
@@ -446,11 +446,11 @@ laplaceParameters = [50,100]
 
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
 
-#deformations = @time CalcDynamicDeformation(xVals_Full,tVals10_Full, parameters, inversionMethod)
+deformations = @time CalcDynamicDeformation(xVals_Full,tVals10_Full, parameters, inversionMethod)
 graphName = "LongIntervalDQ_50_100"
-#save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
-deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
 
 
 
@@ -464,6 +464,48 @@ gr()
 Graph10Times(deformations,xVals_Full,tVals10_Full,parameters,SteadyStateDeformations, [-0.00005,0.00005], colour2, colour1, figurePath, graphName)
 #[-0.000035,0.000015]
 
+
+#Bigger DQ
+
+k = 6.9*10^7
+C = 10^7
+v = 30
+
+
+
+leftTZ = TransitionZone(5, k, 2*k, C, 2*C)
+rightTZ = AddConsistentTZ(10,leftTZ,2*k,2*C)
+xtz_list = [leftTZ]
+
+
+parameters= [EI, m, xp, xtz_list, P, v]
+
+
+
+laplaceParameters = [200,4000]
+
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
+
+deformations = @time CalcDynamicDeformation(xVals_Full,tVals10_Full, parameters, inversionMethod)
+graphName = "LongIntervalDQ_200_4000"
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+
+
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_Full,tVals10_Full,parameters, k, C)
+SteadyDeformation2 = SteadyStateTravellingSolutionBF(xVals_Full,tVals10_Full,parameters, 2*k, 2*C)
+
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+
+
+gr()
+Graph10Times(deformations,xVals_Full,tVals10_Full,parameters,SteadyStateDeformations, [-0.00005,0.00005], colour2, colour1, figurePath, graphName)
+#[-0.000035,0.000015]
+
+
+#MARK: BigFloat
 #----Actual BigFloat------#
 
 k = 6.9*10^7
@@ -484,11 +526,11 @@ laplaceParameters = [50,100]
 
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
 
-#deformations = @time CalcDynamicDeformationBF(xVals_Full,tVals10_Full, parameters, inversionMethod)
+deformations = @time CalcDynamicDeformationBF(xVals_Full,tVals10_Full, parameters, inversionMethod)
 graphName = "LongIntervalWeeks_BF_DQ_50_100"
-#save(DataPath*"/"*graphName*".jld", "deformations",deformations)
+save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
-deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+#deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
 
 
 

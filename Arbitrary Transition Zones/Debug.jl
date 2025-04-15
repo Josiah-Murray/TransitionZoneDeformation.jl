@@ -20,7 +20,7 @@ const P = -10^4 #Force conveyed by point load
 
 const xp = 0 #Starting position of point force
 
-const xLeft_Full = 0
+const xLeft_Full = -10
 const xRight_Full = 30
 const xNum_Full = 100
 const xVals_Full = LinRange(xLeft_Full,xRight_Full,xNum_Full)
@@ -52,19 +52,28 @@ v = 30
 
 
 
-leftTZ = TransitionZone(5, k, 2*k, C, 2*C)
-xtz_list = [leftTZ]
+leftTZ = TransitionZone(-5, k, 2*k, C, 2*C)
+rightTZ = AddConsistentTZ(10,leftTZ,k,C)
+xtz_list = [leftTZ, rightTZ]
 
 
 parameters= [EI, m, xp, xtz_list, P, v]
 
 laplaceParameters = [50,100]
-sVals = LinRange(-50,50,100)
 
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
 
+#||--N=1024--||#
+println("Weeks 128")
+function N(x)
+  return 128
+end
+#inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+
+
+
 deformations = @time CalcDynamicDeformation(xVals_Full,tVals10_Full, parameters, inversionMethod)
-graphName = "LongIntervalWeeks1024"
+graphName = "LongIntervalDQ"
 #save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
 #deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
@@ -72,10 +81,10 @@ graphName = "LongIntervalWeeks1024"
 
 
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals_Full,tVals10_Full,parameters, k, C)
-SteadyDeformation2 = SteadyStateTravellingSolutionBF(xVals_Full,tVals10_Full,parameters, 2*k, 2*C)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals_Full,tVals10_Full,parameters, 2*k, 2*C)
 
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
 
 gr()
-Graph10Times(deformations,xVals_Full,tVals10_Full,parameters,SteadyStateDeformations, [-0.00005,0.00005], colour2, colour1, figurePath, "temp")
+Graph10Times(deformations,xVals_Full,tVals10_Full,parameters,SteadyStateDeformations, [-0.00003,0.000025], colour2, colour1, figurePath, "temp")
