@@ -52,10 +52,10 @@ v = 30
 
 
 
-leftTZ = TransitionZone(5, k, 2*k, C, 2*C)
+leftTZ = TransitionZone(5, k, 3*k, C, 3*C)
 rightTZ = AddConsistentTZ(10,leftTZ,k,C)
 xtz_list = [leftTZ, rightTZ]
-xtz_list = [leftTZ]
+#xtz_list = [leftTZ]
 
 
 parameters= [EI, m, xp, xtz_list, P, v]
@@ -82,7 +82,7 @@ graphName = "LongIntervalDQ"
 
 
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals_Full,tVals10_Full,parameters, k, C)
-SteadyDeformation2 = SteadyStateTravellingSolution(xVals_Full,tVals10_Full,parameters, 2*k, 2*C)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals_Full,tVals10_Full,parameters, 3*k, 3*C)
 
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
