@@ -67,9 +67,9 @@ inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadr
 #||--N=1024--||#
 println("Weeks 128")
 function N(x)
-  return 1028
+  return 90
 end
-#inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
 
 
 

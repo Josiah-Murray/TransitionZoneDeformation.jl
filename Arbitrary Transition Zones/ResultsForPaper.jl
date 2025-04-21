@@ -1,4 +1,4 @@
-#sqrt(-1) #So that I don't accidentally run all the code at once.
+sqrt(-1) #So that I don't accidentally run all the code at once.
 using WAV #To play a sound when computation finished
 using Plots
 using JLD
@@ -147,8 +147,9 @@ graphName = "ComparingToTravellingWaveWeeks1024"
 save(DataPath*"/"*graphName*".jld", "deformations",deformations)
 
 #deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
-
-
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals,tVals10,parameters, k, C)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals,tVals10,parameters, 2*k, 2*C)
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
 gr()
 Graph10Times(deformations,xVals,tVals10,parameters,SteadyStateDeformations, [-0.00055,0.00015], colour2, colour1, figurePath, graphName)
