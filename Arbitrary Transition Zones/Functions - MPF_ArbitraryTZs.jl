@@ -88,10 +88,6 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x,s, parameters)
 
   ŷ = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x,s, parameters, C, k, 0) + (P/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C*s + k )  )*Heaviside((x-xp)/v)
 
-  #ŷ = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + (P/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C*s + k )  )*Heaviside((x-xp)/v)
-
-  #BUG
-  #return ICResponse(x,s, parameters, C, k, 0)
   return ŷ
 
 end
@@ -103,16 +99,10 @@ end
 #If N>0, it returns the value of the nth x-derivative of the response.
 function ICResponse(x, s, parameters, C, k, N)
   EI, m, xp, xtz_list, P, v = parameters
-  #P=-10^4
+
   k_init = xtz_list[1].k_left
   C_init = xtz_list[1].C_left
 
-  #k_init = 2*6.9*10^6
-  #C_init = 4*10^6
-  #C = C_init
-  #k = k_init
-  #k = 6.9*10^7
-  #C = 10^7
 
   λ = (k_init/(4*EI))^(1/4)
   β = C_init/(2*sqrt(k_init*m))
@@ -126,7 +116,6 @@ function ICResponse(x, s, parameters, C, k, N)
   responseCoeff(w) = 1/(EI*w^4 + m*s^2 + C*s + k)
 
   η_Coefficients = [- α^2*β^2, 0, (α^4 - 1), 0,  2*α^2, 0, 1]
-  #η_Coefficients = [1, 0, 2*α^2, 0 ,(α^4 - 1), 0, - α^2*β^2, ]
   η_list = roots(η_Coefficients)
 
   #Find η in first segment
@@ -163,33 +152,6 @@ function ICResponse(x, s, parameters, C, k, N)
   )/2
   )
 
-
-  #=
-  wPlus(θ) = (P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*
-  ( -( (α*β/η - η^2) )*(
-  (
-  responseCoeff((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*(((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^N)*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ ) -
-  responseCoeff((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*(((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^N)*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ )
-  ) /( 2im*η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) +
-  (
-  responseCoeff((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*(((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^N)*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  ) +
-  responseCoeff((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*(((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^N)*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  )
-  )/2
-  )
-
-
-  wMinus(θ) = (P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*
-  ( -( (α*β/η + η^2) )*(
-  (
-  responseCoeff((η + im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*(((η + im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^N)*exp( (η + im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ ) -
-  responseCoeff((η - im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*(((η - im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^N)*exp( (η - im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ )
-  ) /( 2im*η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) +
-  (
-  responseCoeff((η + im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*(((η + im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^N)*exp( (η + im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  ) +
-  responseCoeff((η - im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*(((η - im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^N)*exp( (η - im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  )
-  )/2
-  )
-  =#
 
 
   wMinusCritical(θ) = (P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*(  -( (α*β/η + η^2) )
@@ -258,12 +220,8 @@ function ICResponse(x, s, parameters, C, k, N)
 
 
 
-  #println("k_init: ", k_init, "C_init: ", C_init )
-
-  #println("k: ", k, "C: ", C )
-
-
   icResponse = (m*s + C)*Y₀ + m*Y₁
+
   return icResponse
 end
 
@@ -342,9 +300,7 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
 
         #RHS Vector associated with point force
         for i = 1:4
-          #RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*( P  )*(  1/( abs(v)*( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )  )  )
           RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( P/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   ) - ( ICResponse(xp+eps(), s, parameters, tz.C_left, tz.k_left, i-1) - ICResponse(xp-eps(), s, parameters, tz.C_left, tz.k_left, i-1) )
-
         end
 
 
@@ -388,7 +344,6 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
   #TODO Add possibility of point force being completely to right.
 
   #add last row corresponding to zero deformation at inf. on right
-  #Would putting it first help with the computation?
   LHSMatrix = [LHSMatrix; zeros(Complex{Float64},2, numRows - 4) [ 1 0 0 0 ; 0 0 0 1] ]
 
 
@@ -426,7 +381,6 @@ function SteadyStateTravellingSolution(xVals, tVals, parameters, k, C)
   β_cr = (1/α)*sqrt(2/27)*(2*α^2 + sqrt(3+α^4))*(-α^2+sqrt(3+α^4))
 
   η_Coefficients = [- α^2*β^2, 0, (α^4 - 1), 0,  2*α^2, 0, 1]
-  #η_Coefficients = [1, 0, 2*α^2, 0 ,(α^4 - 1), 0, - α^2*β^2, ]
   η_list = roots(η_Coefficients)
 
   #Find η in first segment
