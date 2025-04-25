@@ -29,11 +29,11 @@ const P = -10^4 #Force conveyed by point load
 
 
 
-const xp = 0 #Starting position of point force
+const xp = -6 #Starting position of point force
 
 
-const xLeft = -1
-const xRight = 1
+const xLeft = -10
+const xRight = 30
 const xNum = 100
 const xVals = LinRange(xLeft,xRight,xNum)
 
@@ -67,13 +67,14 @@ redLineColour = RGB(0.5,0.2,0.15)
 
 k = 6.9*10^7
 C = 10^7
-v = 1
+v = 30
 
 
 
 
-leftTZ = TransitionZone(xRight+1, k, k, C, C)
-xtz_list = [leftTZ]
+leftTZ = TransitionZone(-5, k, 2*k, C, 2*C)
+rightTZ = AddConsistentTZ(1, leftTZ, k,C)
+xtz_list = [leftTZ,rightTZ]
 
 
 parameters= [EI, m, xp, xtz_list, P, v]

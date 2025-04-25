@@ -304,7 +304,6 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
         end
 
 
-
         pointForceAdded = true
 
         if(!segmentFound)
@@ -347,15 +346,28 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
   LHSMatrix = [LHSMatrix; zeros(Complex{Float64},2, numRows - 4) [ 1 0 0 0 ; 0 0 0 1] ]
 
 
+  bVals = LHSMatrix\RHS
+  #=
   bVals = try
     LHSMatrix\RHS
   catch
     println("s = ", s)
   end
+  =#
   bVals[2] = 0
   bVals[3] = 0
   bVals[end] = 0
   bVals[end-3]=0
+
+
+  if (-5.5<x<-4.5)
+    if (-1<imag(s)<1)
+      println("")
+      println("x: ",x," s: ", s, " Max:", findmax(abs.(LHSMatrix)))#BUG
+      println(RHS)
+      println("")
+    end
+  end
 
 
 
