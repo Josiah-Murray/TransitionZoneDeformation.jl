@@ -17,7 +17,7 @@ include(joinpath(functionFolder, "Graphing - MPF_ArbitraryTZs.jl"))
 
 solidLine = RGB(0.5,0.2,0.4)
 
-brokenLine = RGB(0.84901960784313725, 0.5274509803921569, 0.2549019607843137)
+brokenLine = RGB(0.84901960784313725, 0.8274509803921569, 0.2549019607843137)
 
 transitionZoneLine = RGB(0,0,0)
 pointForceLine = RGB(0,0,0)
@@ -39,8 +39,8 @@ background_dark]
 #MARK: Flag
 #||||||||||||||||||||||\
 
-SaveFlag = false
-LoadFlag = true
+SaveFlag = true
+LoadFlag = false
 
 
 #||||||||||||||||||||||/
@@ -196,3 +196,64 @@ display(p)
 #Direct quadrature
 
 #Weeks' method
+
+
+
+#||||||||||||||||||||||/
+#MARK: Acceleration
+#||||||||||||||||||||||\
+
+#Calculate the acceleration of the beam using second order
+#finite difference approximations
+
+
+function CalculateAccelerations(deformations, tVals)
+  Δt = tVals[2]-tVals[1]
+  central = (y1,y2,y3) -> (y1 -2*y2  + y3)*Δt^2
+  forward = (y1,y2,y3,y4) -> (2*y1 - 5*y2 +4*y3 - y4)*Δt^2
+  backward = (y1,y2,y3,y4) -> (-y1 + 4*y2 - 5*y3 +2*y4)*Δt^2
+  accelerations = zeros(size(deformations))
+  for xi in eachindex(deformations[1,:])
+    accelerations[1,xi] = forward(deformations[1,xi], deformations[2,xi], deformations[3,xi], deformations[4,xi])
+    for ti in 2:length(tVals)-1
+      accelerations[ti,xi] = central(deformations[ti-1,xi], deformations[ti,xi], deformations[ti+1,xi])
+    end
+    accelerations[end,xi] = backward(deformations[end-3,xi], deformations[end-2,xi],deformations[end-1,xi],deformations[end,xi])
+  end
+  return accelerations
+end
+
+
+#BUG
+graphName = "Acceleration"
+
+leftTZ = TransitionZone(0.5, k, 2*k, C, 2*C)
+xtz_list = [leftTZ]
+
+parameters = [EI, m, xp, xtz_list, P, v_short]
+
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+
+if !LoadFlag
+  deformations = @time CalcDynamicDeformation(xVals_short, tVals10_short, parameters, inversionMethod)
+  if SaveFlag
+    save(DataPath*"/"*graphName*".jld", "deformations", deformations)
+  end
+else
+  deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+end
+
+accelerations = CalculateAccelerations(deformations,tVals10_short)
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
+SteadyStateDeformations = [SteadyDeformation1]
+
+gr()
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "BinDef", graphName)
+
+
+gr()
+Graph10Times(accelerations,xVals_short,tVals10_short,parameters, false, [-2*10^-5, 2*10^-5], colours, "BinAcc", graphName)
