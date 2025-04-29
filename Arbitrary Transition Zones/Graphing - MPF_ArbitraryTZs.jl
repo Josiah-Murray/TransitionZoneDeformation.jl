@@ -233,11 +233,11 @@ function GraphTimeEvolution(data, xVals, tVals, tIndexes, parameters, steadyStat
    display(p)
 end
 
-
+#MARK: WIP
 #For a set of tIndexes (should probably be no more than about 5?), plot each of the
 #relevant deformation profiles on the same graph.
 #If no desired ylims or steady states, set these values to false.
-function MultiPlotTimeEvolution(data, xVals, tVals, tIndexes, parameters, steadyStateDeformations, yLims, colour1, colour2)
+function MultiPlotTimeEvolution(data, xVals, tVals, tIndexes, parameters, steadyStateDeformations, yLims, colours)
 
   ~, ~, xp, tz_list, ~, v = parameters
   tNum = length(tVals)
@@ -315,16 +315,16 @@ function MultiPlotTimeEvolution(data, xVals, tVals, tIndexes, parameters, steady
 
 end
 
-#MARK: Main function
+#MARK: Main functions
 #For a set of tIndexes (should probably be no more than about 5?), plot each of the
 #relevant deformation profiles on the same graph.
 #If no desired ylims or steady states, set these values to false.
-function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, parameters, steadyStateDeformations, yLims, colour1, colour2)
+function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, parameters, steadyStateDeformations, yLims, colours)
 
   #backgroundColour_min = RGB(0.9,0.9,0.95)
   #backgroundColour_max = RGB(0.7,0.7,0.8)
-  backgroundColour_min = RGB(0.95,0.9,0.9)
-  backgroundColour_max = RGB(0.8,0.7,0.7)
+  backgroundColour_min = colours[5]
+  backgroundColour_max = colours[6]
 
 
   ~, ~, xp, tz_list, ~, v = parameters
@@ -382,23 +382,23 @@ function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, par
 
     #plot lines for transition zones
     for tz in tz_list
-      p = vline!([tz.location],color=RGB(0,0,0), width=1, framestyle=:box)
+      p = vline!([tz.location],color=colours[3], width=1, framestyle=:box)
     end
 
     ti = tIndexes[i]
 
-    gradLineColour = CustomGradient(i/length(tIndexes), colour2,colour1)
+    #gradLineColour = CustomGradient(i/length(tIndexes), colour2,colour1)
 
     #Plot line for moving point force
-    p = vline!([v*(tVals[i]) + xp], width=3, color=colour2)
+    p = vline!([v*(tVals[i]) + xp], width=3, color=colours[4])
 
 
 
 
-    p = plot!(xVals, data[ti,:], lc = colour1, lw=4, ylimits = yLims, xlimits = (xLeft,xRight))
+    p = plot!(xVals, data[ti,:], lc = colours[1], lw=4, ylimits = yLims, xlimits = (xLeft,xRight))
     if(steadyStateDeformations != false)
       for j in eachindex(SteadyStateDeformations)
-        p = plot!(xVals, SteadyStateDeformations[j][ti,:], linestyle = :dash, color = RGB(0.5,0.2,0.15), lw=2.5)
+        p = plot!(xVals, SteadyStateDeformations[j][ti,:], linestyle = :dash, color = colours[2], lw=2.5)
       end
     end
     p = plot!(framestyle=:box)
@@ -413,13 +413,14 @@ function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, par
 
 end
 
+#MARK: WIP
 #Takes in a set of deformations defined for 10 time values and plots each time in a 5 by 2 grid.
 #Note that, when called in a file, the line `gr()` should be added first, else the formatting will be wrong.
 #For whatever reason, adding it to the function itself, doesn't help.
 #It also needs to be added before each call, not just once in the document.
 #As I have come to say often in my PhD, 'Everything is broken and I don't know why'.
-function Graph10Times(deformations, xVals, tVals, parameters, SteadyStateDeformations, ylims, colour1, colour2, storageFolderPath, graphName)
-  p_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xVals, tVals, 1:10, parameters, SteadyStateDeformations, ylims, colour1, colour2)
+function Graph10Times(deformations, xVals, tVals, parameters, SteadyStateDeformations, ylims, colours, storageFolderPath, graphName)
+  p_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xVals, tVals, 1:10, parameters, SteadyStateDeformations, ylims, colours)
   p1 = plot(p_list[1:5]..., layout = grid(5,1), size = (1200,600))
   p2 = plot(p_list[6:10]..., layout = grid(5,1), size = (1200,600))
   p = plot(p1,p2, layout = grid(1,2), size = (1200,1200),leftmargin=10Plots.mm)

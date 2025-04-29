@@ -10,6 +10,37 @@ include(joinpath(functionFolder, "Functions - Inversion schemes.jl"))
 include(joinpath(functionFolder, "Functions - MPF_ArbitraryTZs.jl"))
 include(joinpath(functionFolder, "Graphing - MPF_ArbitraryTZs.jl"))
 
+#||||||||||||||||||||||/
+#MARK: Colours
+#||||||||||||||||||||||\
+
+solidLine = RGB(0.5,0.2,0.4)
+
+brokenLine = RGB(0.84901960784313725, 0.5274509803921569, 0.2549019607843137)
+
+transitionZoneLine = RGB(0,0,0)
+pointForceLine = RGB(0,0,0)
+
+background_light = RGB(0.82,0.9,0.91)
+background_dark = RGB(0.65,0.75,0.75)
+
+colours = [solidLine,
+brokenLine,
+transitionZoneLine,
+pointForceLine,
+background_light,
+background_dark]
+
+
+
+
+#||||||||||||||||||||||/
+#MARK: Flag
+#||||||||||||||||||||||\
+
+SaveFlag = false
+LoadFlag = true
+
 
 #||||||||||||||||||||||/
 #MARK: Constants
