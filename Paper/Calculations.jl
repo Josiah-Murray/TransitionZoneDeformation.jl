@@ -5,6 +5,7 @@ using JLD
 println(pwd())
 
 DataPath = "Paper/Data"
+functionFolder = "../Arbitrary Transition Zones"
 
 include(joinpath(functionFolder, "Functions - Inversion schemes.jl"))
 include(joinpath(functionFolder, "Functions - MPF_ArbitraryTZs.jl"))
@@ -46,8 +47,7 @@ LoadFlag = true
 #MARK: Constants
 #||||||||||||||||||||||\
 
-SaveFlag = true
-LoadFlag = false
+
 
 #||--Model constants--||#
 
@@ -111,7 +111,7 @@ xtz_list = [leftTZ]
 parameters = [EI, m, xp, xtz_list, P, v_short]
 
 function N(x)
-  return 256
+  return 1024
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
 
@@ -130,15 +130,69 @@ SteadyStateDeformations = [SteadyDeformation1]
 
 #BUG
 gr()
-Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colour2, colour1, "Figures", graphName)
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "Figures", graphName)
 
 
 
 #||--Errors--||#
-function CompareToTravellingWave()
-  return NaN #TODO
+function CompareToTravellingWave(xVals, tVals, deformations, SteadyStateDeformations)
+
+  Δx = xVals[2]-xVals[1]
+
+  error = zeros(length(tVals),1)
+  #Uses the l2 norm
+  for ti in eachindex(tVals)
+    for xi in eachindex(xVals)
+      error[ti] = sqrt(Δx*(deformations[ti,xi]-SteadyStateDeformations[ti,xi])^2)
+    end
+  end
+
+  return error
 end
+
+
+tempErrors = CompareToTravellingWave(xVals_short, tVals10_short, deformations, SteadyDeformation1)
+gr()
+plot(tVals10_short, tempErrors, yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box)
+
+
 #Some investigation of error using varying parameters
+function CompareWeeksMethod_NVals(xVals, tVals, parameters, NVals, SteadyStateDeformations)
+
+  errorList = Any[]
+
+  for N in NVals
+    NFunc = (x) -> N
+    inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, NFunc)
+    deformations = @time CalcDynamicDeformation(xVals, tVals, parameters, inversionMethod)
+
+    push!(errorList, CompareToTravellingWave(xVals,tVals, deformations, SteadyStateDeformations))
+
+
+  end
+  return errorList
+end
+
+NVals = [8,16,32,64,128,256, 512, 1024]
+#NVals = [8,16,32]
+graphName = "Weeks_steadyState_Comparison_NVals"
+if !LoadFlag
+  errorList = CompareWeeksMethod_NVals(xVals_short,tVals10_short, parameters, NVals, SteadyDeformation1)
+  if SaveFlag
+    save(DataPath*"/"*graphName*".jld", "errorList", errorList)
+  end
+else
+  deformations = load(DataPath*"/"*graphName*".jld")["errorList"]
+end
+
+gr()
+p=plot()
+for e in errorList
+  local p=plot!(tVals10_short, e, yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box)
+end
+display(p)
+
+
 #Direct quadrature
 
 #Weeks' method
