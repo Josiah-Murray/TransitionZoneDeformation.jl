@@ -64,7 +64,7 @@ function GifWithFeatures(data, xVals, tVals, parameters, steadyStateDeformations
     println(yLims)
    end
 
-  @gif for ti in 1:tNum
+  @gif for ti in eachindex(tVals)
     p=plot()
     #plot lines for transition zones
     for tz in tz_list
@@ -72,7 +72,7 @@ function GifWithFeatures(data, xVals, tVals, parameters, steadyStateDeformations
     end
 
     #Plot line for moving point force
-    p = vline!([v*(ti-1)*(tMax-tMin)/tNum + xp], width=3, color=RGB(0.3,0.3,0.4))
+    p = vline!([v*(ti-1)*(tVals[end]-tVals[1])/length(tVals) + xp], width=3, color=RGB(0.3,0.3,0.4))
 
     #Plot graph
     p = plot!(xVals, data[ti,:], lc=RGB(0.5,0.4,0.9), lw=3, ylimits = yLims, xlimits = (xLeft,xRight))
