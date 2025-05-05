@@ -413,7 +413,100 @@ function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, par
 
 end
 
-#MARK: WIP
+function AccelerationMultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, parameters, steadyStateDeformations, yLims, colours)
+
+  #backgroundColour_min = RGB(0.9,0.9,0.95)
+  #backgroundColour_max = RGB(0.7,0.7,0.8)
+  backgroundColour_min = colours[5]
+  backgroundColour_max = colours[6]
+
+
+  ~, ~, xp, tz_list, ~, v = parameters
+  tNum = length(tVals)
+  xLeft = xVals[1]
+  xRight = xVals[end]
+
+  #If y limits aren't specified, come up with some
+  if (yLims==false)
+    println("Automatic y limits:")
+    if (steadyStateDeformations!=false)
+      yLims = [Inf, -Inf]
+      for s in SteadyStateDeformations
+        s_max  = maximum(s)
+        s_min = minimum(s)
+        if s_min < yLims[1]
+          yLims[1] = maximum(s)
+        end
+        if s_max > yLims[2]
+          yLims[2] = s_max
+        end
+      end
+      def_max = maximum(deformations)
+      def_min = minimum(deformations)
+
+      if def_min < yLims[1]
+        yLims[1] = def_min
+      end
+      if def_max > yLims[2]
+        yLims[2] = def_max
+      end
+    else
+      yLims = [minimum(deformations), maximum(deformations)]
+    end
+
+    #Add some fraction of the height to top and bottom
+    height = yLims[2]-yLims[1]
+    fraction = 0.1
+    yLims = [yLims[1]-height*fraction, yLims[2] + height*fraction]
+
+    println(yLims)
+  end
+
+
+
+
+
+  p_list = []
+
+  for i in eachindex(tIndexes)
+    p = plot()
+
+    #Colour in background for transition zones
+    colourGraphSegment(p,tz_list, xLeft, xRight, yLims, backgroundColour_min, backgroundColour_max)
+
+    #plot lines for transition zones
+    for tz in tz_list
+      p = vline!([tz.location],color=colours[3], width=1, framestyle=:box)
+    end
+
+    ti = tIndexes[i]
+
+    #gradLineColour = CustomGradient(i/length(tIndexes), colour2,colour1)
+
+    #Plot line for moving point force
+    p = vline!([v*(tVals[i]) + xp], width=3, color=colours[4])
+
+
+
+
+    p = plot!(xVals, data[ti,:], lc = colours[1], lw=4, ylimits = yLims, xlimits = (xLeft,xRight))
+    if(steadyStateDeformations != false)
+      for j in eachindex(SteadyStateDeformations)
+        p = plot!(xVals, SteadyStateDeformations[j][ti,:], linestyle = :dash, color = colours[2], lw=2.5)
+      end
+    end
+    p = plot!(framestyle=:box)
+    title!(string(round(tVals[ti], digits=3))*" s" , titlefontsize = 12,line=-10)
+    xlabel!("Beam coordinate (m)", xguidefontsize=10)
+    ylabel!("Acceleration (m/s²)", yguidefontsize=10)
+
+    p_list = [p_list; p]
+  end
+
+  return p_list
+
+end
+
 #Takes in a set of deformations defined for 10 time values and plots each time in a 5 by 2 grid.
 #Note that, when called in a file, the line `gr()` should be added first, else the formatting will be wrong.
 #For whatever reason, adding it to the function itself, doesn't help.
@@ -421,6 +514,29 @@ end
 #As I have come to say often in my PhD, 'Everything is broken and I don't know why'.
 function Graph10Times(deformations, xVals, tVals, parameters, SteadyStateDeformations, ylims, colours, storageFolderPath, graphName)
   p_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xVals, tVals, 1:10, parameters, SteadyStateDeformations, ylims, colours)
+  p1 = plot(p_list[1:5]..., layout = grid(5,1), size = (1200,600))
+  p2 = plot(p_list[6:10]..., layout = grid(5,1), size = (1200,600))
+  p = plot(p1,p2, layout = grid(1,2), size = (1200,1200),leftmargin=10Plots.mm)
+  display(p)
+  savefig(p, storageFolderPath*graphName*".png")
+  savefig(p, storageFolderPath*graphName*".pdf")
+end
+
+
+
+
+function Graph10AccelerationTimes(accelerations, xVals, tVals, parameters, SteadyStateDeformations, ylims, colours, storageFolderPath, graphName)
+
+  #construct new set of deformations and times with appropriate ten times. Use those in MultiPlotTimeEvolution instead
+  accelerations10 = zeros(10, length(xVals))
+  tVals10 = zeros(1,10)
+  for i = 1:10
+    i_ac = Int(round(i*length(tVals)/10))
+    accelerations10[i,:] = accelerations[i_ac,:]
+    tVals10[i]  = tVals[i_ac]
+  end
+
+  p_list = AccelerationMultiPlotTimeEvolution_ReturnPlotList(accelerations10, xVals, tVals10, 1:10, parameters, SteadyStateDeformations, ylims, colours)
   p1 = plot(p_list[1:5]..., layout = grid(5,1), size = (1200,600))
   p2 = plot(p_list[6:10]..., layout = grid(5,1), size = (1200,600))
   p = plot(p1,p2, layout = grid(1,2), size = (1200,1200),leftmargin=10Plots.mm)

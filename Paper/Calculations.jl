@@ -1,3 +1,4 @@
+sqrt(-1)
 using WAV #To play a sound when computation finished
 using Plots
 using JLD
@@ -106,12 +107,45 @@ const tVals_fast = LinRange(tMin_fast,tMax_fast,tNum_fast)
 const tVals10_fast = LinRange(tMin_fast,tMax_fast,10)
 
 
+#MARK: Functions
+
+function CalculateAccelerations(deformations, tVals)
+  Δt = tVals[2]-tVals[1]
+  central = (y1,y2,y3) -> (y1 -2*y2  + y3)/Δt^2
+  forward = (y1,y2,y3,y4) -> (2*y1 - 5*y2 +4*y3 - y4)/Δt^2
+  backward = (y1,y2,y3,y4) -> (-y1 + 4*y2 - 5*y3 +2*y4)/Δt^2
+  accelerations = zeros(size(deformations))
+  for xi in eachindex(deformations[1,:])
+    accelerations[1,xi] = forward(deformations[1,xi], deformations[2,xi], deformations[3,xi], deformations[4,xi])
+    for ti in 2:length(tVals)-1
+      accelerations[ti,xi] = central(deformations[ti-1,xi], deformations[ti,xi], deformations[ti+1,xi])
+    end
+    accelerations[end,xi] = backward(deformations[end-3,xi], deformations[end-2,xi],deformations[end-1,xi],deformations[end,xi])
+  end
+  return accelerations
+end
+
+
+
+
+
 #||||||||||||||||||||||/
 #||||--Travelling wave
 #||||||||||||||||||||||\
 
 k = 6.9*10^7
 C = 10^7
+
+
+
+
+
+
+#MARK:||COMPARISON||
+
+
+
+
 
 
 
@@ -544,30 +578,45 @@ display(p)
 savefig(p, ""*graphName*".png")
 savefig(p, ""*graphName*".pdf")
 
+#MARK:||END COMPARISON||
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#MARK:||TRANSITIONS||
+
+
+
+
+
+
+
+
+
+
 
 #||||||||||||||||||||||/
-#MARK: Acceleration
+#MARK: DEPRECATED Acceleration
 #||||||||||||||||||||||\
 
 #Calculate the acceleration of the beam using second order
 #finite difference approximations
 
 
-function CalculateAccelerations(deformations, tVals)
-  Δt = tVals[2]-tVals[1]
-  central = (y1,y2,y3) -> (y1 -2*y2  + y3)/Δt^2
-  forward = (y1,y2,y3,y4) -> (2*y1 - 5*y2 +4*y3 - y4)/Δt^2
-  backward = (y1,y2,y3,y4) -> (-y1 + 4*y2 - 5*y3 +2*y4)/Δt^2
-  accelerations = zeros(size(deformations))
-  for xi in eachindex(deformations[1,:])
-    accelerations[1,xi] = forward(deformations[1,xi], deformations[2,xi], deformations[3,xi], deformations[4,xi])
-    for ti in 2:length(tVals)-1
-      accelerations[ti,xi] = central(deformations[ti-1,xi], deformations[ti,xi], deformations[ti+1,xi])
-    end
-    accelerations[end,xi] = backward(deformations[end-3,xi], deformations[end-2,xi],deformations[end-1,xi],deformations[end,xi])
-  end
-  return accelerations
-end
+
 
 
 #BUG
@@ -611,6 +660,206 @@ deformations = @time CalcDynamicDeformation(xVals_short, tVals_short, parameters
 accelerations = CalculateAccelerations(deformations,tVals_short)
 
 GifWithFeatures(accelerations, xVals_short, tVals_short, parameters, false, false)
+
+
+
+
+
+
+
+#MARK: Single TZ Weeks
+
+graphName = "SingleTZ_Weeks_4096"
+
+leftTZ = TransitionZone(0.3, k, 2*k, C, 2*C)
+xtz_list = [leftTZ]
+
+parameters = [EI, m, xp, xtz_list, P, v_short]
+
+function N(x)
+  return 4096
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+
+if !LoadFlag
+  deformations = @time CalcDynamicDeformation(xVals_short, tVals10_short, parameters, inversionMethod)
+  if SaveFlag
+    save(DataPath*"/"*graphName*".jld", "deformations", deformations)
+  end
+else
+  deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+end
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, 2*k, 2*C)
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+
+#BUG
+gr()
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
+
+
+
+
+
+
+graphName = "SingleTZ_Weeks_1024"
+
+leftTZ = TransitionZone(0.3, k, 2*k, C, 2*C)
+xtz_list = [leftTZ]
+
+parameters = [EI, m, xp, xtz_list, P, v_short]
+
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+
+if !LoadFlag
+  deformations = @time CalcDynamicDeformation(xVals_short, tVals10_short, parameters, inversionMethod)
+  if SaveFlag
+    save(DataPath*"/"*graphName*".jld", "deformations", deformations)
+  end
+else
+  deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+end
+
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, 2*k, 2*C)
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+
+#BUG
+gr()
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
+
+#MARK: Acceleration
+
+graphName = "SingleTZ_Weeks_1024_100"
+
+
+leftTZ = TransitionZone(0.3, k, 2*k, C, 2*C)
+xtz_list = [leftTZ]
+
+parameters = [EI, m, xp, xtz_list, P, v_short]
+
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+
+if !LoadFlag
+  deformations = @time CalcDynamicDeformation(xVals_short, tVals_short, parameters, inversionMethod)
+  if SaveFlag
+    save(DataPath*"/"*graphName*".jld", "deformations", deformations)
+  end
+else
+  deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+end
+
+
+
+accelerations = CalculateAccelerations(deformations,tVals_short)
+
+gr()
+#TODO: Implement.
+Graph10AccelerationTimes(accelerations,xVals_short,tVals_short,parameters, false, [-0.1,0.1], colours, "Acc_", graphName)
+
+
+
+
+
+#MARK: Graduated TZ Weeks
+
+
+
+graphName = "GraduatedTZ_Weeks_1024"
+
+TZ1 = TransitionZone(0.3, k/2, 5*k/8, C/2, 5*C/8)
+TZ2 = AddConsistentTZ(0.475, TZ1, 6*k/8, 6*C/8)
+TZ3 = AddConsistentTZ(0.65, TZ2, 7*k/8, 7*C/8)
+TZ4 = AddConsistentTZ(0.825, TZ3, k, C)
+
+
+xtz_list = [TZ1,TZ2,TZ3,TZ4]
+
+parameters = [EI, m, xp, xtz_list, P, v_short]
+
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+
+if !LoadFlag
+  deformations = @time CalcDynamicDeformation(xVals_short, tVals10_short, parameters, inversionMethod)
+  if SaveFlag
+    save(DataPath*"/"*graphName*".jld", "deformations", deformations)
+  end
+else
+  deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+end
+
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k/2, C/2)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+
+#BUG
+gr()
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
+
+
+
+
+
+
+#MARK: Two steps TZ Weeks
+
+
+
+graphName = "TwoStepsTZ_Weeks_1024"
+
+TZ1 = TransitionZone(0.1, k, 2k, C, 2C)
+TZ2 = AddConsistentTZ(0.3, TZ1, k, C)
+TZ3 = AddConsistentTZ(0.5, TZ2, 2k, 2C)
+TZ4 = AddConsistentTZ(0.7, TZ3, k, C)
+
+
+xtz_list = [TZ1,TZ2,TZ3,TZ4]
+
+parameters = [EI, m, xp, xtz_list, P, v_short]
+
+function N(x)
+  return 1024
+end
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+
+if !LoadFlag
+  deformations = @time CalcDynamicDeformation(xVals_short, tVals10_short, parameters, inversionMethod)
+  if SaveFlag
+    save(DataPath*"/"*graphName*".jld", "deformations", deformations)
+  end
+else
+  deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+end
+
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
+SteadyDeformation2 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, 2k, 2C)
+SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
+
+#BUG
+gr()
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
+
+
+
+
+
+
+
+
+
 
 
 y, fs = wavread(raw"C:/Windows/Media/Ring01.wav")
