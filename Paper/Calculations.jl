@@ -1,4 +1,4 @@
-sqrt(-1)
+#sqrt(-1)
 using WAV #To play a sound when computation finished
 using Plots
 using JLD
@@ -17,11 +17,16 @@ include(joinpath(functionFolder, "Graphing - MPF_ArbitraryTZs.jl"))
 #||||||||||||||||||||||\
 
 solidLine = RGB(0.5,0.2,0.4)
+#solidLine = RGB(1,0,0.4)
+#solidLine = RGB(0.8,0.4,1)
+#solidLine = RGB(0.9,0.2,0.2)
 
 brokenLine = RGB(0.84901960784313725, 0.8274509803921569, 0.2549019607843137)
+brokenLine = RGB(0,0,0)
+
 
 transitionZoneLine = RGB(0,0,0)
-pointForceLine = RGB(0,0,0)
+pointForceLine = RGB(0,0,0.25)
 
 background_light = RGB(0.82,0.9,0.91)
 background_dark = RGB(0.65,0.75,0.75)
@@ -32,6 +37,11 @@ transitionZoneLine,
 pointForceLine,
 background_light,
 background_dark]
+
+#BUG
+gr()
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
+
 
 
 
@@ -957,7 +967,6 @@ SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,par
 SteadyDeformation2 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
-#BUG
 gr()
 Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
 
