@@ -388,14 +388,27 @@ else
   errorList = load(DataPath*"/"*graphName*".jld")["errorList"]
 end
 
+normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
+errorList_normed = errorList./normalFactor
+
+
 gr()
 p=plot()
-for e in errorList
-  local p=plot!(tVals10_short, e, yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box)
+
+for i in eachindex(errorList)
+  local p=plot!(tVals10_short, errorList_normed[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "N = "*string(NVals[i]), markershape=:cross, markersize=7)
 end
+plot!(legend=:outerright)
+
+plot!(xlabel="Time (s)")
+plot!(ylabel = "Error")
+
 display(p)
 savefig(p, ""*graphName*".png")
 savefig(p, ""*graphName*".pdf")
+
+
+
 
 #||--MARK:Errors DQ
 
@@ -434,8 +447,11 @@ function CompareDQMethod(xVals, tVals, parameters, iParameters, SteadyStateDefor
   return errorList
 end
 
+
 #TODO
 iParameters = [ [50,100],[50,200], [50,1000], [400,100], [400,200], [400,1000], [800,1000], [1600,1000], [3200,1000]]
+
+
 
 graphName = "DQ_steadyState_Comparison"
 if !LoadFlag
@@ -446,17 +462,87 @@ if !LoadFlag
 else
   errorList = load(DataPath*"/"*graphName*".jld")["errorList"]
 end
+normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
+errorList_normed = errorList./normalFactor
 
 #errorList = CompareDQMethod(xVals_short,tVals10_short, parameters, iParameters, SteadyDeformation1)
 
+
+
+#=
 gr()
 p=plot()
 for e in errorList
   local p=plot!(tVals10_short, e, yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box)
 end
+
+plot!(xlabel="Time (s)")
+plot!(ylabel! = "Error")
 display(p)
 savefig(p, ""*graphName*".png")
 savefig(p, ""*graphName*".pdf")
+
+=#
+#=
+
+normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
+errorList_normed = errorList./normalFactor
+
+
+gr()
+p=plot()
+
+
+for i in eachindex(errorList)
+  local p=plot!(tVals10_short, errorList_normed[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "R = "*string(iParameters[i][1])*" "^(2*(4-length(string(iParameters[i][1]))))*" N = "*string(iParameters[i][2]))
+end
+plot!(legend=:outerright)
+
+plot!(xlabel="Time (s)")
+plot!(ylabel = "Error")
+
+display(p)
+savefig(p, ""*graphName*".png")
+savefig(p, ""*graphName*".pdf")
+
+=#
+
+
+normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
+errorList_normed = errorList./normalFactor
+
+
+markerTypes = [
+  :dtriangle,
+  :utriangle,
+  :cross,
+  :dtriangle,
+  :utriangle,
+  :cross,
+  :cross,
+  :cross,
+  :cross
+]
+
+
+
+gr()
+p=plot()
+
+
+for i in eachindex(errorList)
+  local p=plot!(tVals10_short, errorList_normed[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "R = "*string(iParameters[i][1])*" "^(2*(4-length(string(iParameters[i][1]))))*" N = "*string(iParameters[i][2]), markershape = markerTypes[i],  markersize = 7)
+end
+plot!(legend=:outerright)
+
+plot!(xlabel="Time (s)")
+plot!(ylabel = "Error")
+
+display(p)
+savefig(p, ""*graphName*".png")
+savefig(p, ""*graphName*".pdf")
+
+
 
 #||--MARK: Errors Fast Weeks
 
@@ -509,14 +595,44 @@ else
   errorList = load(DataPath*"/"*graphName*".jld")["errorList"]
 end
 
+#=
 gr()
 p=plot()
-for e in errorList
-  local p=plot!(tVals10_fast, e, yaxis=:log, xlims=[tVals10_fast[1], tVals10_fast[end]], lw=3, box=:box)
+
+for i in eachindex(errorList)
+  local p=plot!(tVals10_short, errorList[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "N = "*string(NVals[i]))
 end
+plot!(legend=:outerright)
+
+plot!(xlabel="Time (s)")
+plot!(ylabel = "Error")
+
 display(p)
 savefig(p, ""*graphName*".png")
 savefig(p, ""*graphName*".pdf")
+=#
+
+normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
+errorList_normed = errorList./normalFactor
+
+
+gr()
+p=plot()
+
+for i in eachindex(errorList)
+  local p=plot!(tVals10_short, errorList_normed[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "N = "*string(NVals[i]), markershape=:cross, markersize=7)
+end
+plot!(legend=:outerright)
+
+plot!(xlabel="Time (s)")
+plot!(ylabel = "Error")
+
+display(p)
+savefig(p, ""*graphName*".png")
+savefig(p, ""*graphName*".pdf")
+
+
+
 
 
 #||--MARK:Errors Fast DQ
@@ -552,10 +668,9 @@ function CompareDQMethod(xVals, tVals, parameters, iParameters, SteadyStateDefor
   return errorList
 end
 
-iParameters = [ [50,100],[50,200], [50,1000], [400,100], [400,200], [400,1000], [800,1000]]
-iParameters = [[50,100], [400,100], [800,100], [1600, 1000]]
-iParameters = [[50,1000], [400,1000], [800,1000], [1600,1000], [3200,1000]]
 iParameters = [ [50,100],[50,200], [50,1000], [400,100], [400,200], [400,1000], [800,1000], [1600,1000], [3200,1000]]
+
+
 
 
 graphName = "DQ_Fast_steadyState_Comparison"
@@ -568,6 +683,8 @@ else
   errorList = load(DataPath*"/"*graphName*".jld")["errorList"]
 end
 #errorList = CompareDQMethod(xVals_fast,tVals10_fast, parameters, iParameters, SteadyDeformation1)
+
+#=
 gr()
 p=plot()
 for e in errorList
@@ -575,6 +692,42 @@ for e in errorList
 end
 display(p)
 
+savefig(p, ""*graphName*".png")
+savefig(p, ""*graphName*".pdf")
+=#
+
+
+normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
+errorList_normed = errorList./normalFactor
+
+
+markerTypes = [
+  :dtriangle,
+  :utriangle,
+  :cross,
+  :dtriangle,
+  :utriangle,
+  :cross,
+  :cross,
+  :cross,
+  :cross
+]
+
+
+
+gr()
+p=plot()
+
+
+for i in eachindex(errorList)
+  local p=plot!(tVals10_short, errorList_normed[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "R = "*string(iParameters[i][1])*" "^(2*(4-length(string(iParameters[i][1]))))*" N = "*string(iParameters[i][2]), markershape = markerTypes[i],  markersize = 7)
+end
+plot!(legend=:outerright)
+
+plot!(xlabel="Time (s)")
+plot!(ylabel = "Error")
+
+display(p)
 savefig(p, ""*graphName*".png")
 savefig(p, ""*graphName*".pdf")
 
