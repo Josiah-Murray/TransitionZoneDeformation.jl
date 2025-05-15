@@ -38,20 +38,17 @@ pointForceLine,
 background_light,
 background_dark]
 
-#BUG
-gr()
-Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
-
-
 
 
 
 #||||||||||||||||||||||/
-#MARK: Flag
+#MARK: Flags
 #||||||||||||||||||||||\
 
-SaveFlag = false
+#Perform fresh calculations or load from old?
 LoadFlag = true
+#Save calculations from file?
+SaveFlag = false
 
 
 #||||||||||||||||||||||/
@@ -259,7 +256,7 @@ Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeform
 
 
 
-
+#=
 graphName = "ICs_Direct quadrature_800-2000"
 
 leftTZ = TransitionZone(0.5, k, k, C, C)
@@ -290,9 +287,9 @@ SteadyStateDeformations = [SteadyDeformation1]
 gr()
 Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
 
+=#
 
-
-
+#=
 graphName = "ICs_Direct quadrature_400-1000"
 
 leftTZ = TransitionZone(0.5, k, k, C, C)
@@ -321,7 +318,7 @@ SteadyStateDeformations = [SteadyDeformation1]
 
 gr()
 Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
-
+=#
 
 
 
@@ -780,7 +777,7 @@ savefig(p, ""*graphName*".pdf")
 
 
 
-
+#=
 
 #BUG
 graphName = "Acceleration"
@@ -825,7 +822,7 @@ accelerations = CalculateAccelerations(deformations,tVals_short)
 GifWithFeatures(accelerations, xVals_short, tVals_short, parameters, false, false)
 
 
-
+=#
 
 
 
