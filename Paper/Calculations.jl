@@ -1,4 +1,4 @@
-#sqrt(-1)
+sqrt(-1)
 using WAV #To play a sound when computation finished
 using Plots
 using JLD
@@ -538,7 +538,7 @@ p=plot()
 
 
 for i in eachindex(errorList)
-  local p=plot!(tVals10_short, errorList_normed[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "R = "*string(iParameters[i][1])*" "^(2*(4-length(string(iParameters[i][1]))))*" N = "*string(iParameters[i][2]), markershape = markerTypes[i],  markersize = 7)
+  local p=plot!(tVals10_short, errorList_normed[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "R = "*string(iParameters[i][1])*"\nN = "*string(iParameters[i][2]), markershape = markerTypes[i],  markersize = 7)
 end
 plot!(legend=:outerright)
 
@@ -727,7 +727,7 @@ p=plot()
 
 
 for i in eachindex(errorList)
-  local p=plot!(tVals10_short, errorList_normed[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "R = "*string(iParameters[i][1])*" "^(2*(4-length(string(iParameters[i][1]))))*" N = "*string(iParameters[i][2]), markershape = markerTypes[i],  markersize = 7)
+  local p=plot!(tVals10_short, errorList_normed[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "R = "*string(iParameters[i][1])*"\nN = "*string(iParameters[i][2]), markershape = markerTypes[i],  markersize = 7)
 end
 plot!(legend=:outerright)
 
