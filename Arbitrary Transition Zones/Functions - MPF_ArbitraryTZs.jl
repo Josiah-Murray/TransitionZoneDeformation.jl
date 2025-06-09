@@ -10,10 +10,9 @@ This file contains functions used for solving for the dynamic deformation of an
 infinite Euler-Bernoulli beam on a piecewise constant viscoelastic foundation
 subject to a moving load using the method of undetermined coefficients.
 
-In particular, is it designed with 'MPF_ArbitraryTZs.jl' in mind.
+In particular, is it designed with 'Calculations.jl' in mind.
 =#
 
-#TODO Organise the order/inclusion of the functions.
 
 #|||||||||||||||||||||||||||||#
 #||--Concerning parameters--||#
@@ -562,12 +561,18 @@ function CriticalVelocity(EI, m , k)
 end
 
 
+
+#These two functions implement the damping ratio calculations described in
+#Basu, D., & Rao, N. S. V. K. (2013).
+#Analytical solutions for Euler–Bernoulli beam on
+# visco‐elastic foundation subjected to moving load.
+#International Journal for Numerical and Analytical Methods in Geomechanics, 37(8), 945–960.
+#https://doi.org/10.1002/nag.1135
 function CriticalDampingRatio(EI,m,k,v)
   α = v/((4*k*EI/(m^2))^(1/4))
   β_cr = (1/α)*sqrt(2/27)*(2*α^2 + sqrt(3+α^4))*sqrt(-α^2+sqrt(3+α^4))
   return β_cr
 end
-
 function DampingRatio(m,C,k)
   return C/(2*sqrt(k*m))
 end
