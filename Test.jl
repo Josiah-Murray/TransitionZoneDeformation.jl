@@ -164,10 +164,7 @@ xtz_list = [leftTZ]
 
 parameters = [EI, m, xp, xtz_list, P, v_fast]
 
-function N(x)
-  return 256
-end
-inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> GWRImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, 30)
 
 if !LoadFlag
   deformations = @time CalcDynamicDeformation(xVals_fast, tVals10_fast, parameters, inversionMethod)
@@ -184,4 +181,4 @@ SteadyStateDeformations = [SteadyDeformation1]
 
 #BUG
 gr()
-Graph10Times(deformations,xVals_fast,tVals10_fast,parameters,SteadyStateDeformations, false, colours, "", graphName)
+Graph10Times(deformations,xVals_fast,tVals10_fast,parameters,SteadyStateDeformations, [-0.00005, 0.00005], colours, "", graphName)

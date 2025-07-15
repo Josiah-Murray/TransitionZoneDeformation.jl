@@ -362,14 +362,20 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
   LHSMatrix = [LHSMatrix; zeros(Complex{Float64},2, numRows - 4) [ 1 0 0 0 ; 0 0 0 1] ]
 
 
-  bVals = LHSMatrix\RHS
-  #=
+  #bVals = LHSMatrix\RHS
+
+
   bVals = try
     LHSMatrix\RHS
   catch
-    println("s = ", s)
+    @error "LHSMatrix contains NaN/inf"
+    println("x value: ", x)
+    println("s value: ", s)
   end
-  =#
+
+
+
+
   bVals[2] = 0
   bVals[3] = 0
   bVals[end] = 0
