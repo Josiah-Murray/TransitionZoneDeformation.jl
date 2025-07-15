@@ -10,7 +10,7 @@ This file contains functions used for solving for the dynamic deformation of an
 infinite Euler-Bernoulli beam on a piecewise constant viscoelastic foundation
 subject to a moving load using the method of undetermined coefficients.
 
-In particular, is it designed with 'Calculations.jl' in mind.
+The primary function is CalcDynamicDeformation.
 =#
 
 
@@ -36,23 +36,39 @@ function AddConsistentTZ(location, previousTZ::TransitionZone, k_right, C_right)
 end
 
 
-#Calculates the deformation of the beam in the model described above.
-#Inversion method is one of the 'implementation' functions in "Functions - Inversion schemes.jl"
+#MARK: Primary function
+#=
+Calculates the deformation of the beam in the model described above.
+
+xVals => A list of x values (e.g. LinRange(-1,1,100))
+
+tVals => A list of time values (e.g. LinRange(0,1,100)) Note that some inversion methods do not support
+
+parameters => A list containing information about the system being modelled.
+  In particular parameters = (EI, m, xp, xtz_list, P, v)
+  Where EI is the beam's elastic modulus multiplied by the moment of inertia,
+  m is the mass of te beam, xp is the x coordinate of the point force at t=0,
+  xtz_list is a list of transition zones (with type 'TransitionZone'),
+  P is the strength of the point force, and v is the velocity of the point force.
+
+Inversion method => One of the functions from  "Functions - Inversion schemes.jl" aliased with the relevant
+  method inputs pre-inputted
+  (e.g. inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals, tVals, LaplaceSpaceFunction, parameters, 40))
+
+=#
 function CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
-
+  if parameters[end] == 0
+    #TODO Implement v=0
+    @error "CalcDynamicDeformation unimplemented for v=0"
+    return NaN
+  end
   println(inversionMethod)
-  deformations = invertLaplace(xVals, tVals, LaplaceSpaceFunctionMovingPointForce1TZ, parameters, inversionMethod)
+  deformations = inversionMethod(xVals, tVals, LaplaceSpaceFunctionMovingPointForce1TZ, parameters)
 
 
   return deformations
 end
 
-#A wrapper function which calls a particular laplace inversion implementation.
-#Change this function to change the iLaplace method.
-function invertLaplace(xVals,tVals,LaplaceSpaceFunction, parameters, inversionMethod)
-  deformations = inversionMethod(xVals, tVals, LaplaceSpaceFunction, parameters)
-  return deformations
-end
 
 #MARK: Laplace-space
 #The solution for the deformation in Laplace space.
@@ -226,10 +242,13 @@ end
 
 #Define the Heaviside function.
 #For various reasons (partially because we are technically working in
-#generalised function spaces) we can avoid the H(0) = 1/2 technicality.
+#generalised function spaces) we don't need to be particularly worried about
+#its definition at zero.
 function Heaviside(x)
   if x<0
     return 0
+  elseif x==0
+    return 0.5
   else
     return 1
   end
@@ -339,8 +358,6 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
     segment += 1
   end
 
-  #TODO Add possibility of point force being completely to right.
-
   #add last row corresponding to zero deformation at inf. on right
   LHSMatrix = [LHSMatrix; zeros(Complex{Float64},2, numRows - 4) [ 1 0 0 0 ; 0 0 0 1] ]
 
@@ -356,17 +373,10 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
   bVals[2] = 0
   bVals[3] = 0
   bVals[end] = 0
-  bVals[end-3]=0
+  bVals[end-3]= 0
 
 
-  if (-5.5<x<-4.5)
-    if (-1<imag(s)<1)
-      println("")
-      println("x: ",x," s: ", s, " Max:", findmax(abs.(LHSMatrix)))#BUG
-      println(RHS)
-      println("")
-    end
-  end
+
 
 
 
@@ -377,13 +387,29 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
 
 end
 
+
+
+
+
+
+#|||||||||||||||||\\
 #MARK: Steady-state
+#|||||||||||||||||//
+
+#=
+
+The functions in this section relate to steady-state (i.e. travelling wave)
+solutions for a point force traversing a beam on a homogeneous foundation.
+
+=#
+
+
 
 using PolynomialRoots
 #This solution is found using the paper "Analytical Solutions for Euler-Bernoulli
 #Beam on Viscoelastic Foundation Subjected to Moving Load".
 function SteadyStateTravellingSolution(xVals, tVals, parameters, k, C)
-  EI, m, xp, xtz_list, P, v = parameters
+  EI, m, xp, ~, P, v = parameters
 
 
   λ = (k/(4*EI))^(1/4)
