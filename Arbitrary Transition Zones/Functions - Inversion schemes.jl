@@ -2,7 +2,8 @@ using InverseLaplace
 
 
 #Implementation of the GWR algorithm from iLaplace package
-function GaverStehfestImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
+function GWRImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
+
 
   deformations = zeros(length(tVals), length(xVals))
 
@@ -11,15 +12,22 @@ function GaverStehfestImplementation(xVals,tVals,LaplaceSpaceFunction, parameter
     for ti in eachindex(tVals)
       t=tVals[ti]
 
+      if t==0
+        deformations[ti,xi] = 0
 
-      #deformation = real( DirectQuadratureMethod(t, s-> LaplaceSpaceFunctionMovingPointForce1TZ(x,s,parameters)) )
-
-      ft = GWR( s -> real(LaplaceSpaceFunction(x,s,parameters)), 40 )
-      deformation = real( ft(t) )
+      else
 
 
-      #Update the deformations matrix.
-      deformations[ti,xi] = deformation
+        #deformation = real( DirectQuadratureMethod(t, s-> LaplaceSpaceFunctionMovingPointForce1TZ(x,s,parameters)) )
+
+        ft = GWR( s -> real(LaplaceSpaceFunction(x,s,parameters)), N)
+        deformation = real( ft(t) )
+
+
+        #Update the deformations matrix.
+        deformations[ti,xi] = deformation
+
+      end
 
     end
   end
