@@ -14,7 +14,7 @@ function GaverStehfestImplementation(xVals,tVals,LaplaceSpaceFunction, parameter
 
       #deformation = real( DirectQuadratureMethod(t, s-> LaplaceSpaceFunctionMovingPointForce1TZ(x,s,parameters)) )
 
-      ft = GWR( s -> real(LaplaceSpaceFunction(x,s,parameters)), 8 )
+      ft = GWR( s -> real(LaplaceSpaceFunction(x,s,parameters)), 40 )
       deformation = real( ft(t) )
 
 
