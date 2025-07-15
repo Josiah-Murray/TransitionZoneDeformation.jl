@@ -2,7 +2,7 @@ using InverseLaplace
 
 
 #Implementation of the GWR algorithm from iLaplace package
-function GaverStehfestImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
+function GWRImplementation(xVals,tVals,LaplaceSpaceFunction, parameters)
 
   deformations = zeros(length(tVals), length(xVals))
 
