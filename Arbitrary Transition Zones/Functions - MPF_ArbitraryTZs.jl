@@ -10,7 +10,7 @@ This file contains functions used for solving for the dynamic deformation of an
 infinite Euler-Bernoulli beam on a piecewise constant viscoelastic foundation
 subject to a moving load using the method of undetermined coefficients.
 
-The primary function is CalcDynamicDeformation.
+The function  'CalcDynamicDeformation' is the one that is intended to be called by a user.
 =#
 
 
@@ -30,13 +30,14 @@ struct TransitionZone
 end
 
 #A function which creates a new transition zone object such that
-#its left parameters match with the right parameters of a previous transition zone
+#its left parameters match with the right parameters of a previous transition zone.
+#Mostly for user convenience.
 function AddConsistentTZ(location, previousTZ::TransitionZone, k_right, C_right)
   return TransitionZone(location, previousTZ.k_right, k_right, previousTZ.C_right, C_right)
 end
 
-
-#MARK: Primary function
+#||||||||||||||||||||||||||||||||||||||||||||
+#MARK: Call this function
 #=
 Calculates the deformation of the beam in the model described above.
 
@@ -58,7 +59,7 @@ Inversion method => One of the functions from  "Functions - Inversion schemes.jl
 =#
 function CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
   if parameters[end] == 0
-    #TODO Implement v=0
+    #TODO Implement v=0?
     @error "CalcDynamicDeformation unimplemented for v=0"
     return NaN
   end
@@ -73,7 +74,7 @@ end
 #MARK: Laplace-space
 #The solution for the deformation in Laplace space.
 #Defined here so that it can be inverted elsewhere.
-function LaplaceSpaceFunctionMovingPointForce1TZ(x,s, parameters)
+function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters)
   EI, m, xp, xtz_list, P, v = parameters
 
   #Set the correct parameters.
@@ -101,7 +102,7 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x,s, parameters)
 
   #||--Construct Laplace-space function--||#
 
-  ŷ = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x,s, parameters, C, k, 0) + (P/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C*s + k )  )*Heaviside((x-xp)/v)
+  ŷ = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x,s, parameters, C, k, 0) +   (P/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C*s + k )  )*Heaviside((x-xp)/v)
 
   return ŷ
 
@@ -241,9 +242,6 @@ function ICResponse(x, s, parameters, C, k, N)
 end
 
 #Define the Heaviside function.
-#For various reasons (partially because we are technically working in
-#generalised function spaces) we don't need to be particularly worried about
-#its definition at zero.
 function Heaviside(x)
   if x<0
     return 0
@@ -379,7 +377,7 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
   bVals[2] = 0
   bVals[3] = 0
   bVals[end] = 0
-  bVals[end-3]= 0
+  bVals[end-3] = 0
 
 
 
