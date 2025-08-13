@@ -69,6 +69,8 @@ function CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
 
   return deformations
 end
+#||||||||||||||||||||||||||||||||||||||||||||
+
 
 
 #MARK: Laplace-space
@@ -98,7 +100,32 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters)
 
   #||--Find b values--||#
   #Solve for the undetermined coefficients by solving a linear system
-  b1,b2,b3,b4 = CoefficientSolverMovingPointForce1TZ(x, s, parameters)
+  bVals = CoefficientSolverMovingPointForce1TZ(x, s, parameters)
+
+  #Find correct segment to isolate the coefficients we need for this x value
+  segment = 1
+  pointForceAdded = false
+  for tz in xtz_list
+    if xp < tz.location
+      pointForceAdded = true
+      if x < xp
+        break
+      else
+        segment += 1
+      end
+    end
+    if x < tz.location
+      break
+    else
+      segment += 1
+    end
+  end
+  if ~pointForceAdded
+    segment += 1
+  end
+  #Pull out correct b values
+  b1,b2,b3,b4 =  bVals[4*(segment-1) + 1], bVals[4*(segment-1) + 2], bVals[4*(segment-1) + 3], bVals[4*(segment-1) + 4]
+
 
   #||--Construct Laplace-space function--||#
 
@@ -107,6 +134,8 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters)
   return ŷ
 
 end
+
+
 
 #MARK: IC response
 
@@ -387,7 +416,8 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
   if(!segmentFound)
     returnSegment = segment
   end
-  return bVals[4*(returnSegment-1) + 1], bVals[4*(returnSegment-1) + 2], bVals[4*(returnSegment-1) + 3], bVals[4*(returnSegment-1) + 4]
+  return bVals
+  #return bVals[4*(returnSegment-1) + 1], bVals[4*(returnSegment-1) + 2], bVals[4*(returnSegment-1) + 3], bVals[4*(returnSegment-1) + 4]
 
 end
 
