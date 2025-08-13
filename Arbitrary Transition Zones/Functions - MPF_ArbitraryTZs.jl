@@ -76,7 +76,7 @@ end
 #MARK: Laplace-space
 #The solution for the deformation in Laplace space.
 #Defined here so that it can be inverted elsewhere.
-function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters)
+function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters; Coeff_solver = CoefficientSolverMovingPointForce1TZ)
   EI, m, xp, xtz_list, P, v = parameters
 
   #Set the correct parameters.
@@ -100,7 +100,7 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters)
 
   #||--Find b values--||#
   #Solve for the undetermined coefficients by solving a linear system
-  bVals = CoefficientSolverMovingPointForce1TZ(x, s, parameters)
+  bVals = Coeff_solver(s, parameters)
 
   #Find correct segment to isolate the coefficients we need for this x value
   segment = 1
@@ -302,7 +302,7 @@ end
 #MARK: System
 
 #Solves for the undetermined coefficients and returns the correct set of 4 depending on the value of x
-function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
+function CoefficientSolverMovingPointForce1TZ(s, parameters)
 
 
   #Type of xtz_list specified so that autocomplete works.
@@ -325,7 +325,6 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
   pointForceAdded = false #So we can stop comparing the locations
 
   segment = 1
-  segmentFound = false
   returnSegment = 0 #For keeping track of which segment we need to return the coefficients for.
 
 
@@ -351,12 +350,7 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
 
         pointForceAdded = true
 
-        if(!segmentFound)
-          if( x<xp)
-            returnSegment = segment
-            segmentFound = true
-          end
-        end
+
 
         segment += 1
       end
@@ -376,12 +370,7 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
       RHS[2 + (segment-1)*4 + i] = (-s/v)^(i-1)*( P*exp(-s*tz.location/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   ) - 1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_right*s + tz.k_right   )   )*Heaviside((tz.location-xp)/v) - ( ICResponse(tz.location, s, parameters, tz.C_right, tz.k_right, i-1) - ICResponse(tz.location, s, parameters, tz.C_left, tz.k_left, i-1) )
     end
 
-    if(!segmentFound)
-      if(x<tz.location)
-        returnSegment = segment
-        segmentFound = true
-      end
-    end
+
     segment += 1
   end
 
@@ -413,9 +402,7 @@ function CoefficientSolverMovingPointForce1TZ(x, s, parameters)
 
 
 
-  if(!segmentFound)
-    returnSegment = segment
-  end
+
   return bVals
   #return bVals[4*(returnSegment-1) + 1], bVals[4*(returnSegment-1) + 2], bVals[4*(returnSegment-1) + 3], bVals[4*(returnSegment-1) + 4]
 
