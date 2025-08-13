@@ -159,12 +159,14 @@ C = 10^7
 #||--#MARK: Demonstration of the match and shape
 graphName = "Test"
 
-leftTZ = TransitionZone(0.5, k, 2k, C, 2C)
+leftTZ = TransitionZone(0.5, k, k, C, C)
 xtz_list = [leftTZ]
 
 parameters = [EI, m, xp, xtz_list, P, v_fast]
+M = 20
+setprecision(BigFloat,  3*M)
 
-inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> GWRImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, 30)
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> GWRImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, M)
 
 if !LoadFlag
   deformations = @time CalcDynamicDeformation(xVals_fast, tVals10_fast, parameters, inversionMethod)
