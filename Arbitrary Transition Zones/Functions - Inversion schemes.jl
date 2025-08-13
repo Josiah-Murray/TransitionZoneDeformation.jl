@@ -70,6 +70,7 @@ function GWRImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
 
 
   deformations = zeros(length(tVals), length(xVals))
+  tzero_warning = false
 
   for xi in eachindex(xVals)
     x=xVals[xi]
@@ -77,7 +78,10 @@ function GWRImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
       t=tVals[ti]
 
       if t==0
-        @warn "GWR cannot be performed for t=0. Defaulting NaN"
+        if ~tzero_warning
+          @warn "GWR cannot be performed for t=0. Defaulting NaN"
+          tzero_warning = true
+        end
         deformations[ti,xi] = NaN
 
       else
