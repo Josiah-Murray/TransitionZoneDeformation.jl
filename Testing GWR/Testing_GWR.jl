@@ -142,7 +142,7 @@ C = 10^7
 
 
 
-
+#=
 #||--#MARK: fast Demonstration of the match and shape
 graphName = "Demonstration_fast_TravellingWave"
 
@@ -173,7 +173,7 @@ SteadyStateDeformations = [SteadyDeformation1]
 gr()
 Graph10Times(deformations,xVals_fast,tVals10_fast,parameters,SteadyStateDeformations, false, colours, "", graphName)
 
-
+=#
 
 #||--#MARK: GWR
 

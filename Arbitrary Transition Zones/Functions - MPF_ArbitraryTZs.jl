@@ -385,7 +385,6 @@ function CoefficientSolverMovingPointForce1TZ(s, parameters)
     LHSMatrix\RHS
   catch
     @error "LHSMatrix contains NaN/inf"
-    println("x value: ", x)
     println("s value: ", s)
   end
 
