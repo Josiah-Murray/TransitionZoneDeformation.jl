@@ -13,16 +13,21 @@ function GWRImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
       t=tVals[ti]
 
       if t==0
-        deformations[ti,xi] = 0
+        @warn "GWR cannot be performed for t=0. Defaulting NaN"
+        deformations[ti,xi] = NaN
 
       else
 
 
         #deformation = real( DirectQuadratureMethod(t, s-> LaplaceSpaceFunctionMovingPointForce1TZ(x,s,parameters)) )
 
+
         ft = GWR( s -> real(LaplaceSpaceFunction(x,s,parameters)), N)
         deformation = real( ft(t) )
 
+
+        #Note: this is not defined in this repository yet.
+        #deformation = my_gwr(s -> LaplaceSpaceFunction(x,s,parameters), t, N)
 
         #Update the deformations matrix.
         deformations[ti,xi] = deformation
