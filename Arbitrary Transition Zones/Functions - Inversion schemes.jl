@@ -35,6 +35,9 @@ function GWRImplementation_memo(xVals,tVals,LaplaceSpaceFunction, parameters, N)
     for ti in eachindex(tVals)
       t=tVals[ti]
 
+      t = convert(BigFloat, t) #BUG: remove
+
+
       if t==0
         if ~tzero_warning
           @warn "GWR cannot be performed for t=0. Defaulting NaN"
