@@ -75,7 +75,18 @@ end
 #The solution for the deformation in Laplace space.
 #Defined here so that it can be inverted elsewhere.
 function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters; Coeff_solver = CoefficientSolverMovingPointForce1TZ)
+
+  Dt = typeof(s)
+  x  = convert(Dt, x)
+
+  #We convert here so that we don't have to know ahead of time what type we'll need and can let the inversion implementation decide.
   EI, m, xp, xtz_list, P, v = parameters
+  EI = convert(Dt, EI)
+  m  = convert(Dt,  m)
+  xp = convert(Dt, xp)
+  P  = convert(Dt,  P)
+  v  = convert(Dt,  v)
+  parameters = [EI, m, xp, xtz_list, P, v]
 
   #Set the correct parameters.
   #Default to the furthest right parameters, override if we are to the left.
@@ -366,7 +377,7 @@ function CoefficientSolverMovingPointForce1TZ(s, parameters)
     for i = 1:3
       continuitySubMatrix = [continuitySubMatrix; -lr1^i*1exp(lr1*tz.location)  -lr2^i*exp(lr2*tz.location) -lr3^i*exp(lr3*tz.location) -lr4^i*exp(lr4*tz.location) rr1^i*exp(rr1*tz.location)  rr2^i*exp(rr2*tz.location) rr3^i*exp(rr3*tz.location) rr4^i*exp(rr4*tz.location) ]
     end
-    LHSMatrix = [LHSMatrix;     zeros(Complex{Dt}, 4, 4*(segment-1))      continuitySubMatrix     zeros(Complex{Ft}, 4, numRows-4*(segment-1)-8)  ]
+    LHSMatrix = [LHSMatrix;     zeros(Complex{Dt}, 4, 4*(segment-1))      continuitySubMatrix     zeros(Complex{Dt}, 4, numRows-4*(segment-1)-8)  ]
 
     #RHS Vector
     for i = 1:4
