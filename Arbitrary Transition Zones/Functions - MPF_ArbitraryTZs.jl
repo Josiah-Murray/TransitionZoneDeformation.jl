@@ -20,13 +20,14 @@ The function  'CalcDynamicDeformation' is the one that is intended to be called 
 
 #MARK: TZ struct
 
-#Struct which holds information about the transition zones
+#Struct which holds information about the transition zones.
+#All fields should contain be numerical types (i.e. Int, Float64, BigFloat, ArbFloat, etc.).
 struct TransitionZone
-  location::Float64
-  k_left::Float64
-  k_right::Float64
-  C_left::Float64
-  C_right::Float64
+  location
+  k_left
+  k_right
+  C_left
+  C_right
 end
 
 #A function which creates a new transition zone object such that
@@ -63,10 +64,7 @@ function CalcDynamicDeformation(xVals,tVals, parameters, inversionMethod)
     @error "CalcDynamicDeformation unimplemented for v=0"
     return NaN
   end
-  println(inversionMethod)
   deformations = inversionMethod(xVals, tVals, LaplaceSpaceFunctionMovingPointForce1TZ, parameters)
-
-
   return deformations
 end
 #||||||||||||||||||||||||||||||||||||||||||||
@@ -144,6 +142,7 @@ end
 #If N>0, it returns the value of the nth x-derivative of the response.
 function ICResponse(x, s, parameters, C, k, N)
   EI, m, xp, xtz_list, P, v = parameters
+  Dt = typeof(s)
 
   k_init = xtz_list[1].k_left
   C_init = xtz_list[1].C_left
@@ -152,7 +151,7 @@ function ICResponse(x, s, parameters, C, k, N)
   λ = (k_init/(4*EI))^(1/4)
   β = C_init/(2*sqrt(k_init*m))
   α = v/((4*k_init*EI/(m^2))^(1/4))
-  β_cr = (1/α)*sqrt(2/27)*(2*α^2 + sqrt(3+α^4))*(-α^2+sqrt(3+α^4))
+  β_cr = (1/α)*sqrt(convert(Dt, 2//27))*(2*α^2 + sqrt(3+α^4))*(-α^2+sqrt(3+α^4))
 
 
 
@@ -164,9 +163,9 @@ function ICResponse(x, s, parameters, C, k, N)
   η_list = roots(η_Coefficients)
 
   #Find η in first segment
-  η = 0+0im;
+  η = zero(Dt)+zero(Dt)*1im;
   for i in eachindex(η_list)
-      if abs(imag(η_list[i]))<0.000001 && real(η_list[i]) > 0
+      if abs(imag(η_list[i]))<0.000001 && real(η_list[i]) > 0 #BUG The way I'm handling the imag part of η here may be causing issues.
               η = η_list[i]
       else
     end#else
@@ -174,77 +173,79 @@ function ICResponse(x, s, parameters, C, k, N)
 
   #||--Responses to initial deformation--||#
   wMinus(θ) = (P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*
-  ( -( (α*β/η + η^2) )*(
-  (
-  responseCoeff((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*(((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^N)*exp( (η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ ) -
-  responseCoeff((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*(((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^N)*exp( (η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ )
-  ) /( 2im*η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) +
-  (
-  responseCoeff((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*(((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^N)*exp( (η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  ) +
-  responseCoeff((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*(((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^N)*exp( (η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  )
-  )/2
-  )
+    ( -( (α*β/η + η^2) )*(
+        (
+          responseCoeff((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*(((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^N)*exp( (η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ ) -
+          responseCoeff((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*(((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^N)*exp( (η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ )
+        ) /( 2im*η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) +
+      (
+        responseCoeff((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*(((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^N)*exp( (η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  ) +
+        responseCoeff((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*(((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^N)*exp( (η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  )
+      )/2
+    )
 
 
 
-  wPlus(θ) = (P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*
-  ( -( (α*β/η - η^2) )*(
-  (responseCoeff((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^N*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ ) -
-   responseCoeff((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^N*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ )
-  ) /( 2im*η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) +
-  (responseCoeff((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^N*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  ) +
-   responseCoeff((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^N*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  )
-  )/2
-  )
+  wPlus(θ) = (P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + convert(Dt, 1//2) * (α*β/η)^2 ))*
+    ( -( (α*β/η - η^2) )*(
+        (
+          responseCoeff((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^N*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ ) -
+          responseCoeff((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^N*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ )
+        ) /( 2im*η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) +
+      (
+        responseCoeff((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^N*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  ) +
+        responseCoeff((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^N*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  )
+      )/2
+    )
 
 
 
-  wMinusCritical(θ) = (P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*(  -( (α*β/η + η^2) )
+  wMinusCritical(θ) = (P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + convert(Dt, 1//2) * (α*β/η)^2 ))*(  -( (α*β/η + η^2) )
     *(
       responseCoeff( (η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)* ( (η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)^N * exp( (η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  )
-    -responseCoeff((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)* ((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)^N * exp( (η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  )
+      -responseCoeff((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)* ((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)^N * exp( (η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  )
     )/  ( 2*η*sqrt(abs(2*α^2 + η^2 - 2*(α*β/η) )) )
     + (
       responseCoeff((η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)*((η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)^N* exp( (η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  )
-    +
-    responseCoeff((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)*((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)^N* exp( (η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  )
+      + responseCoeff((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)*((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)^N* exp( (η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  )
     )/2)
 
 
   #||--Response to initial velocity--||#
-  wDotMinus(θ) = -v*(P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*
-  ( -( (α*β/η + η^2) )*(
-  (
-  responseCoeff((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^(N+1)*exp( (η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ ) -
-  responseCoeff((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^(N+1)*exp( (η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ )
-  ) /( 2im*η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) +
-  (
-  responseCoeff((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^(N+1)*exp( (η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  ) +
-  responseCoeff((η -1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*((η -1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^(N+1)*exp( (η -1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  )
-  )/2
-  )
+  wDotMinus(θ) = -v*(P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + convert(Dt, 1//2) * (α*β/η)^2 ))*
+    ( -( (α*β/η + η^2) )*(
+      (
+        responseCoeff((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^(N+1)*exp( (η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ ) -
+        responseCoeff((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^(N+1)*exp( (η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ )
+      ) /( 2im*η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) +
+      (
+        responseCoeff((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^(N+1)*exp( (η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  ) +
+        responseCoeff((η -1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*((η -1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)^(N+1)*exp( (η -1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  )
+      )/2
+    )
 
 
-  wDotPlus(θ) = -v*(P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*
+  wDotPlus(θ) = -v*(P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + convert(Dt, 1//2) * (α*β/η)^2 ))*
   ( -( (α*β/η - η^2) )*(
-  (
-  responseCoeff((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^(N+1)*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ ) -
-  responseCoeff((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^(N+1)*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ )
-  ) /( 2im*η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) +
-  (
-  responseCoeff((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^(N+1)*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  ) +
-  responseCoeff((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^(N+1)*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  )
-  )/2
+      (
+        responseCoeff((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^(N+1)*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ ) -
+        responseCoeff((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^(N+1)*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ )
+      ) /( 2im*η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) +
+    (
+      responseCoeff((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^(N+1)*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  ) +
+      responseCoeff((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)^(N+1)*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  )
+    )/2
   )
 
 
-  wDotMinusCritical(θ) = -v*(P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )
+  wDotMinusCritical(θ) = -v*(P*λ/(2*k_init))*(  η /  (η^4 + α^2 * η^2 + convert(Dt, 1//2) * (α*β/η)^2 ))*( -( (α*β/η + η^2) )
     *(
       responseCoeff((η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)*((η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)^(N+1) * exp( (η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  ) -
       responseCoeff((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)*((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)^(N+1) * exp( (η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  )    )/  ( 2*η*sqrt(abs(2*α^2 + η^2 - 2*(α*β/η) )) )
     + (
       responseCoeff((η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)*((η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)^(N+1)* exp( (η + sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  ) +
-      responseCoeff((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)*((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)^(N+1)* exp( (η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  ) )/2)
+      responseCoeff((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)*((η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ)^(N+1)* exp( (η - sqrt(abs(2*α^2 + η^2 - 2*(α*β/η))   ))*λ*θ  ) )/2
+    )
 
 
 
@@ -272,12 +273,13 @@ end
 
 #Define the Heaviside function.
 function Heaviside(x)
+  Dt = typeof(x)
   if x<0
-    return 0
+    return zero(Dt)
   elseif x==0
-    return 0.5
+    return convert(Dt, 1//2)
   else
-    return 1
+    return one(Dt)
   end
 end
 
@@ -285,11 +287,12 @@ end
 
 #Roots of the characteristic equation
 function RValues(s, EI, m, C,k)
+  Dt = typeof(s)
   r⁴ = -(m*s^2 + C*s + k)/EI
 
   #Always find rj such that it is in the jth quadrant of the complex plane
   ρ = ( abs(r⁴) )^(1/4)
-  θ = mod( atan( imag(r⁴), real(r⁴) ), 2*pi )/4
+  θ = mod( atan( imag(r⁴), real(r⁴) ), 2*convert(Dt, pi) )/4
 
   r1 = ρ*exp(θ*1im)
   r2 = r1*1im
@@ -304,6 +307,7 @@ end
 #Solves for the undetermined coefficients and returns the correct set of 4 depending on the value of x
 function CoefficientSolverMovingPointForce1TZ(s, parameters)
 
+  Dt = typeof(s)
 
   #Type of xtz_list specified so that autocomplete works.
   EI, m, xp, xtz_list, P, v = parameters
@@ -315,17 +319,16 @@ function CoefficientSolverMovingPointForce1TZ(s, parameters)
 
 
   #Initialise with first row (enforcing zero deformation at inf. on left)
-  LHSMatrix = [ [0 1 0 0 ; 0 0 1 0 ]  zeros(Complex{Float64},2, numRows - 4) ]
+  LHSMatrix = [ [0 1 0 0 ; 0 0 1 0 ]  zeros(Complex{Dt}, 2, numRows - 4) ]
 
 
 
   #RHS Vector for system.
-  RHS = zeros(Complex{Float64},numRows)
+  RHS = zeros(Complex{Dt}, numRows)
 
   pointForceAdded = false #So we can stop comparing the locations
 
   segment = 1
-  returnSegment = 0 #For keeping track of which segment we need to return the coefficients for.
 
 
   for i in eachindex(xtz_list)
@@ -340,11 +343,11 @@ function CoefficientSolverMovingPointForce1TZ(s, parameters)
         for i = 1:3
           continuitySubMatrix = [continuitySubMatrix; -r1^i*1exp(r1*xp)  -r2^i*exp(r2*xp) -r3^i*exp(r3*xp) -r4^i*exp(r4*xp) r1^i*exp(r1*xp)  r2^i*exp(r2*xp) r3^i*exp(r3*xp) r4^i*exp(r4*xp) ]
         end
-        LHSMatrix = [LHSMatrix;     zeros(Complex{Float64}, 4, 4*(segment-1))      continuitySubMatrix     zeros(Complex{Float64}, 4, numRows-4*(segment-1)-8)  ]
+        LHSMatrix = [LHSMatrix;     zeros(Complex{Dt}, 4, 4*(segment-1))      continuitySubMatrix     zeros(Complex{Dt}, 4, numRows-4*(segment-1)-8)  ]
 
         #RHS Vector associated with point force
         for i = 1:4
-          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( P/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   ) - ( ICResponse(xp+eps(), s, parameters, tz.C_left, tz.k_left, i-1) - ICResponse(xp-eps(), s, parameters, tz.C_left, tz.k_left, i-1) )
+          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( P/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   ) - ( ICResponse(xp+eps(), s, parameters, tz.C_left, tz.k_left, i-1) - ICResponse(xp-eps(), s, parameters, tz.C_left, tz.k_left, i-1) )#BUG Will epsilon be too large here?
         end
 
 
@@ -363,7 +366,7 @@ function CoefficientSolverMovingPointForce1TZ(s, parameters)
     for i = 1:3
       continuitySubMatrix = [continuitySubMatrix; -lr1^i*1exp(lr1*tz.location)  -lr2^i*exp(lr2*tz.location) -lr3^i*exp(lr3*tz.location) -lr4^i*exp(lr4*tz.location) rr1^i*exp(rr1*tz.location)  rr2^i*exp(rr2*tz.location) rr3^i*exp(rr3*tz.location) rr4^i*exp(rr4*tz.location) ]
     end
-    LHSMatrix = [LHSMatrix;     zeros(Complex{Float64}, 4, 4*(segment-1))      continuitySubMatrix     zeros(Complex{Float64}, 4, numRows-4*(segment-1)-8)  ]
+    LHSMatrix = [LHSMatrix;     zeros(Complex{Dt}, 4, 4*(segment-1))      continuitySubMatrix     zeros(Complex{Ft}, 4, numRows-4*(segment-1)-8)  ]
 
     #RHS Vector
     for i = 1:4
@@ -375,10 +378,8 @@ function CoefficientSolverMovingPointForce1TZ(s, parameters)
   end
 
   #add last row corresponding to zero deformation at inf. on right
-  LHSMatrix = [LHSMatrix; zeros(Complex{Float64},2, numRows - 4) [ 1 0 0 0 ; 0 0 0 1] ]
+  LHSMatrix = [LHSMatrix; zeros(Complex{Dt},2, numRows - 4) [ 1 0 0 0 ; 0 0 0 1] ]
 
-
-  #bVals = LHSMatrix\RHS
 
 
   bVals = try
@@ -391,10 +392,10 @@ function CoefficientSolverMovingPointForce1TZ(s, parameters)
 
 
 
-  bVals[2] = 0
-  bVals[3] = 0
-  bVals[end] = 0
-  bVals[end-3] = 0
+  bVals[2] = zero(Dt)
+  bVals[3] = zero(Dt)
+  bVals[end] = zero(Dt)
+  bVals[end-3] = zero(Dt)
 
 
 
@@ -403,7 +404,6 @@ function CoefficientSolverMovingPointForce1TZ(s, parameters)
 
 
   return bVals
-  #return bVals[4*(returnSegment-1) + 1], bVals[4*(returnSegment-1) + 2], bVals[4*(returnSegment-1) + 3], bVals[4*(returnSegment-1) + 4]
 
 end
 
@@ -448,10 +448,6 @@ function SteadyStateTravellingSolution(xVals, tVals, parameters, k, C)
       else
     end#else
   end#for
-
-
-  #wMinus(θ) = (P*λ/(2*k))*(  ( η*exp( η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*(sin(sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ  ))
-  #wPlus(θ) = (P*λ/(2*k))*(  ( η*exp( -η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η - η^2) )*(sin(sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ  ))
 
   wMinus(θ) = (P*λ/(2*k))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*
   ( -( (α*β/η + η^2) )*(
@@ -512,7 +508,6 @@ function DerivativeSteadyStateTravellingSolution(xVals, tVals, parameters, ks, C
   β_cr = (1/α)*sqrt(2/27)*(2*α^2 + sqrt(3+α^4))*(-α^2+sqrt(3+α^4))
 
   η_Coefficients = [- α^2*β^2, 0, (α^4 - 1), 0,  2*α^2, 0, 1]
-  #η_Coefficients = [1, 0, 2*α^2, 0 ,(α^4 - 1), 0, - α^2*β^2, ]
   η_list = roots(η_Coefficients)
 
   #Find η in first segment
@@ -524,10 +519,8 @@ function DerivativeSteadyStateTravellingSolution(xVals, tVals, parameters, ks, C
     end#else
   end#for
 
-  #wMinusDash(θ) = (P*λ/(2*ks))*(  ( η*exp( η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*(sin(sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ  ))
   wMinusDash(θ) = (P*λ/(2*ks))*(  ( -v*η^2*λ*exp( η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*(sin(sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ  )) -v*sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*(P*λ/(2*ks))*(  ( η*exp( η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )*(cos(sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) - sin( sqrt(2*α^2 + η^2 - 2*(α*β/η) )*λ*θ  ))
 
-  #wPlusDash(θ) = (P*λ/(2*ks))*(  ( η*exp( -η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η - η^2) )*(sin(sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ  ))
   wPlusDash(θ) = (P*λ/(2*ks))*(  ( v*η^2*λ*exp( -η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η - η^2) )*(sin(sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) + cos( sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ  )) -  v*sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*  (P*λ/(2*ks))*(  ( η*exp( -η* λ*θ  ) ) /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η - η^2) )*(cos(sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ ) /  ( η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) - sin( sqrt(2*α^2 + η^2 + 2*(α*β/η) )*λ*θ  ))
 
 
@@ -536,29 +529,30 @@ function DerivativeSteadyStateTravellingSolution(xVals, tVals, parameters, ks, C
 
 
   wDotMinus(θ) = -v*(P*λ/(2*k))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*
-  ( -( (α*β/η + η^2) )*(
-  (
-  ((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*exp( (η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ ) -
-  ((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*exp( (η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ )
-  ) /( 2im*η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) +
-  (
-  ((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*exp( (η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  ) +
-  ((η -1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*exp( (η -1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  )
-  )/2
-  )
+    ( -( (α*β/η + η^2) )*(
+        (
+         ((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*exp( (η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ ) -
+          ((η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*exp( (η - 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ )
+        ) /( 2im*η*sqrt(2*α^2 + η^2 - 2*(α*β/η) ) ) ) +
+      (
+        ((η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*exp( (η + 1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  ) +
+        ((η -1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ)*exp( (η -1im*sqrt(2*α^2 + η^2 - 2*(α*β/η) ))*λ*θ  )
+      )/2
+    )
 
 
   wDotPlus(θ) = -v*(P*λ/(2*k))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*
-  ( -( (α*β/η - η^2) )*(
-  (
-  ((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ ) -
-  ((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ )
-  ) /( 2im*η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) ) ) +
-  (
-  ((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  ) +
-  ((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  )
-  )/2
-  )
+    ( -( (α*β/η - η^2) )*(
+        (
+          ((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ ) -
+          ((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ )
+        ) /( 2im*η*sqrt(2*α^2 + η^2 + 2*(α*β/η) ) )
+      ) +
+      (
+        ((-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*exp( (-η + im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  ) +
+        ((-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ)*exp( (-η - im*sqrt(2*α^2 + η^2 + 2*(α*β/η) ))*λ*θ  )
+      )/2
+    )
 
 
   wDotMinusCritical(θ) = -v*(P*λ/(2*k))*(  η /  (η^4 + α^2 * η^2 + 0.5 * (α*β/η)^2 ))*( -( (α*β/η + η^2) )
