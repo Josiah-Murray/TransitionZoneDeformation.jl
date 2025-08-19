@@ -115,7 +115,7 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters; Coeff_solver 
   segment = 1
   pointForceAdded = false
   for tz in xtz_list
-    if xp < tz.location
+    if ~pointForceAdded && xp < tz.location
       pointForceAdded = true
       if x < xp
         break
@@ -132,6 +132,7 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters; Coeff_solver 
   if ~pointForceAdded
     segment += 1
   end
+
   #Pull out correct b values
   b1,b2,b3,b4 =  bVals[4*(segment-1) + 1], bVals[4*(segment-1) + 2], bVals[4*(segment-1) + 3], bVals[4*(segment-1) + 4]
 
