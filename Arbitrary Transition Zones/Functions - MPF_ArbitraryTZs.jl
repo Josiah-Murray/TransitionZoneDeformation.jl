@@ -175,9 +175,10 @@ function ICResponse(x, s, parameters, C, k, N)
   η_list = roots(η_Coefficients)
 
   #Find η in first segment
-  η = zero(Dt)+zero(Dt)*1im;
+  η = zero(Dt)+Inf*1im; #Preallocate to have something to compare to in first round of for loop
+
   for i in eachindex(η_list)
-      if abs(imag(η_list[i]))<0.000001 && real(η_list[i]) > 0 #BUG The way I'm handling the imag part of η here may be causing issues.
+      if abs(imag(η_list[i]))<abs(imag(η)) && real(η_list[i]) > 0
               η = η_list[i]
       else
     end#else
