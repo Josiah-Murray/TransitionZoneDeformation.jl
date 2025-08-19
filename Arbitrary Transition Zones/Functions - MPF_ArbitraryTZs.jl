@@ -359,7 +359,7 @@ function CoefficientSolverMovingPointForce1TZ(s, parameters)
 
         #RHS Vector associated with point force
         for i = 1:4
-          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( P/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   ) - ( ICResponse(xp+eps(), s, parameters, tz.C_left, tz.k_left, i-1) - ICResponse(xp-eps(), s, parameters, tz.C_left, tz.k_left, i-1) )#BUG Will epsilon be too large here?
+          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( P/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   ) - ( ICResponse(xp+eps(Dt), s, parameters, tz.C_left, tz.k_left, i-1) - ICResponse(xp-eps(Dt), s, parameters, tz.C_left, tz.k_left, i-1) )
         end
 
 
