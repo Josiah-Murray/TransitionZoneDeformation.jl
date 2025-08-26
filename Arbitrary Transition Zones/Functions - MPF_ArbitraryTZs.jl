@@ -76,7 +76,7 @@ end
 #Defined here so that it can be inverted elsewhere.
 function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters; Coeff_solver = CoefficientSolverMovingPointForce1TZ)
 
-  Dt = typeof(s)
+  Dt = real(typeof(s))
   x  = convert(Dt, x)
 
   #We convert here so that we don't have to know ahead of time what type we'll need and can let the inversion implementation decide.
@@ -93,7 +93,7 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters; Coeff_solver 
   k = xtz_list[end].k_right
   C = xtz_list[end].C_right
   for tz in xtz_list
-    if x < tz.location
+    if real(x) < tz.location
       k = tz.k_left
       C = tz.C_left
       break
@@ -117,13 +117,13 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters; Coeff_solver 
   for tz in xtz_list
     if ~pointForceAdded && xp < tz.location
       pointForceAdded = true
-      if x < xp
+      if real(x) < xp
         break
       else
         segment += 1
       end
     end
-    if x < tz.location
+    if real(x) < tz.location
       break
     else
       segment += 1
@@ -154,7 +154,7 @@ end
 #If N>0, it returns the value of the nth x-derivative of the response.
 function ICResponse(x, s, parameters, C, k, N)
   EI, m, xp, xtz_list, P, v = parameters
-  Dt = typeof(s)
+  Dt = real(typeof(s))
 
   k_init = xtz_list[1].k_left
   C_init = xtz_list[1].C_left
@@ -300,7 +300,7 @@ end
 
 #Roots of the characteristic equation
 function RValues(s, EI, m, C,k)
-  Dt = typeof(s)
+  Dt = real(typeof(s))
   r⁴ = -(m*s^2 + C*s + k)/EI
 
   #Always find rj such that it is in the jth quadrant of the complex plane
@@ -320,7 +320,7 @@ end
 #Solves for the undetermined coefficients and returns the correct set of 4 depending on the value of x
 function CoefficientSolverMovingPointForce1TZ(s, parameters)
 
-  Dt = typeof(s)
+  Dt = real(typeof(s))
 
   #Type of xtz_list specified so that autocomplete works.
   EI, m, xp, xtz_list, P, v = parameters
