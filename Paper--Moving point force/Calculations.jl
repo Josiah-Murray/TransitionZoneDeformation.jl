@@ -157,7 +157,7 @@ C = 10^7
 
 
 ##
-#||--#MARK: Demonstration of the match and shape
+#||--#MARK: Weeks demo
 graphName = "Demonstration_TravellingWave"
 
 leftTZ = TransitionZone(0.5, k, k, C, C)
@@ -183,13 +183,13 @@ end
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
 SteadyStateDeformations = [SteadyDeformation1]
 
-#BUG
+
 gr()
 Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
 
 
 
-#||--#MARK: fast Demonstration of the match and shape
+#||--#MARK: Weeks' fast demo
 graphName = "Demonstration_fast_TravellingWave"
 
 leftTZ = TransitionZone(0.5, k, k, C, C)
@@ -215,14 +215,14 @@ end
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals_fast,tVals10_fast,parameters, k, C)
 SteadyStateDeformations = [SteadyDeformation1]
 
-#BUG
+
 gr()
 Graph10Times(deformations,xVals_fast,tVals10_fast,parameters,SteadyStateDeformations, false, colours, "", graphName)
 
 
 
 
-#||--#MARK: ICs Direct quadrature
+#||--#MARK: DQ Demo
 
 graphName = "ICs_Direct quadrature50-100"
 
@@ -250,75 +250,22 @@ end
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
 SteadyStateDeformations = [SteadyDeformation1]
 
-#BUG
+
 gr()
 Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
 
 
+
+#MARK: GWR Demo
+
+#TODO
 
 #=
-graphName = "ICs_Direct quadrature_800-2000"
 
-leftTZ = TransitionZone(0.5, k, k, C, C)
-xtz_list = [leftTZ]
-
-parameters = [EI, m, xp, xtz_list, P, v_short]
-
-
-laplaceParameters = [800,2000]
-
-inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
-
-
-if !LoadFlag
-  deformations = @time CalcDynamicDeformation(xVals_short, tVals10_short, parameters, inversionMethod)
-  if SaveFlag
-    save(DataPath*"/"*graphName*".jld", "deformations", deformations)
-  end
-else
-  deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
-end
-
-
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
-SteadyStateDeformations = [SteadyDeformation1]
-
-#BUG
-gr()
-Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
+Add in code to provide an example of recovering travelling wave using GWR
 
 =#
 
-#=
-graphName = "ICs_Direct quadrature_400-1000"
-
-leftTZ = TransitionZone(0.5, k, k, C, C)
-xtz_list = [leftTZ]
-
-parameters = [EI, m, xp, xtz_list, P, v_short]
-
-
-laplaceParameters = [400,1000]
-
-inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
-
-
-if !LoadFlag
-  deformations = @time CalcDynamicDeformation(xVals_short, tVals10_short, parameters, inversionMethod)
-  if SaveFlag
-    save(DataPath*"/"*graphName*".jld", "deformations", deformations)
-  end
-else
-  deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
-end
-
-
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
-SteadyStateDeformations = [SteadyDeformation1]
-
-gr()
-Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
-=#
 
 
 
@@ -345,6 +292,7 @@ end
 
 
 #||--MARK: Errors Weeks
+#(Generate graph of error over time for different N values)
 
 
 
@@ -418,6 +366,7 @@ savefig(p, ""*graphName*".pdf")
 
 
 #||--MARK:Errors DQ
+#(Generate graph showing error over time for varying N and R)
 
 
 
@@ -455,7 +404,6 @@ function CompareDQMethod(xVals, tVals, parameters, iParameters, SteadyStateDefor
 end
 
 
-#TODO
 iParameters = [ [50,100],[50,200], [50,1000], [400,100], [400,200], [400,1000], [800,1000], [1600,1000], [3200,1000]]
 
 
@@ -471,48 +419,6 @@ else
 end
 normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
 errorList_normed = errorList./normalFactor
-
-#errorList = CompareDQMethod(xVals_short,tVals10_short, parameters, iParameters, SteadyDeformation1)
-
-
-
-#=
-gr()
-p=plot()
-for e in errorList
-  local p=plot!(tVals10_short, e, yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box)
-end
-
-plot!(xlabel="Time (s)")
-plot!(ylabel! = "Error")
-display(p)
-savefig(p, ""*graphName*".png")
-savefig(p, ""*graphName*".pdf")
-
-=#
-#=
-
-normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
-errorList_normed = errorList./normalFactor
-
-
-gr()
-p=plot()
-
-
-for i in eachindex(errorList)
-  local p=plot!(tVals10_short, errorList_normed[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "R = "*string(iParameters[i][1])*" "^(2*(4-length(string(iParameters[i][1]))))*" N = "*string(iParameters[i][2]))
-end
-plot!(legend=:outerright)
-
-plot!(xlabel="Time (s)")
-plot!(ylabel = "Error")
-
-display(p)
-savefig(p, ""*graphName*".png")
-savefig(p, ""*graphName*".pdf")
-
-=#
 
 
 normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
@@ -551,8 +457,8 @@ savefig(p, ""*graphName*".pdf")
 
 
 
-#||--MARK: Errors Fast Weeks
-
+#||--MARK: Errors Weeks v30
+#(Generate error over time for changing N with v=30)
 
 
 
@@ -564,12 +470,6 @@ parameters = [EI, m, xp, xtz_list, P, v_fast]
 
 SteadyDeformation1 = SteadyStateTravellingSolution(xVals_fast,tVals10_fast,parameters, k, C)
 SteadyStateDeformations = [SteadyDeformation1]
-
-
-
-#tempErrors = CompareToTravellingWave(xVals_fast, tVals10_fast, deformations, SteadyDeformation1)
-#gr()
-#plot(tVals10_fast, tempErrors, yaxis=:log, xlims=[tVals10_fast[1], tVals10_fast[end]], lw=3, box=:box)
 
 
 #Some investigation of error using varying parameters
@@ -602,22 +502,6 @@ else
   errorList = load(DataPath*"/"*graphName*".jld")["errorList"]
 end
 
-#=
-gr()
-p=plot()
-
-for i in eachindex(errorList)
-  local p=plot!(tVals10_short, errorList[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "N = "*string(NVals[i]))
-end
-plot!(legend=:outerright)
-
-plot!(xlabel="Time (s)")
-plot!(ylabel = "Error")
-
-display(p)
-savefig(p, ""*graphName*".png")
-savefig(p, ""*graphName*".pdf")
-=#
 
 normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
 errorList_normed = errorList./normalFactor
@@ -642,7 +526,8 @@ savefig(p, ""*graphName*".pdf")
 
 
 
-#||--MARK:Errors Fast DQ
+#||--MARK:Errors DQ v30
+#(Errors over time for changing N and R with v=30)
 
 
 
@@ -689,19 +574,6 @@ if !LoadFlag
 else
   errorList = load(DataPath*"/"*graphName*".jld")["errorList"]
 end
-#errorList = CompareDQMethod(xVals_fast,tVals10_fast, parameters, iParameters, SteadyDeformation1)
-
-#=
-gr()
-p=plot()
-for e in errorList
-  local p=plot!(tVals10_fast, e, xlims=[tVals10_fast[1], tVals10_fast[end]], lw=3, box=:box)
-end
-display(p)
-
-savefig(p, ""*graphName*".png")
-savefig(p, ""*graphName*".pdf")
-=#
 
 
 normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
@@ -738,7 +610,6 @@ display(p)
 savefig(p, ""*graphName*".png")
 savefig(p, ""*graphName*".pdf")
 
-#MARK:||END COMPARISON||
 
 
 
@@ -756,73 +627,12 @@ savefig(p, ""*graphName*".pdf")
 
 
 
-#MARK:||TRANSITIONS||
+
+#MARK:||DEMONSTRATIONS||
 
 
 
 
-
-
-
-
-
-
-
-#||||||||||||||||||||||/
-#MARK: DEPRECATED Acceleration
-#||||||||||||||||||||||\
-
-#Calculate the acceleration of the beam using second order
-#finite difference approximations
-
-
-
-#=
-
-#BUG
-graphName = "Acceleration"
-
-leftTZ = TransitionZone(0.5, k, 2*k, C, 2*C)
-xtz_list = [leftTZ]
-
-parameters = [EI, m, xp, xtz_list, P, v_short]
-
-function N(x)
-  return 1024
-end
-inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
-
-if !LoadFlag
-  deformations = @time CalcDynamicDeformation(xVals_short, tVals10_short, parameters, inversionMethod)
-  if SaveFlag
-    save(DataPath*"/"*graphName*".jld", "deformations", deformations)
-  end
-else
-  deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
-end
-
-accelerations = CalculateAccelerations(deformations,tVals10_short)
-
-SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
-SteadyStateDeformations = [SteadyDeformation1]
-
-gr()
-Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "BinDef", graphName)
-
-
-gr()
-Graph10Times(accelerations,xVals_short,tVals10_short,parameters, false,false, colours, "BinAcc", graphName)
-
-
-
-
-deformations = @time CalcDynamicDeformation(xVals_short, tVals_short, parameters, inversionMethod)
-accelerations = CalculateAccelerations(deformations,tVals_short)
-
-GifWithFeatures(accelerations, xVals_short, tVals_short, parameters, false, false)
-
-
-=#
 
 
 
@@ -854,7 +664,7 @@ SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,par
 SteadyDeformation2 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, 2*k, 2*C)
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
-#BUG
+
 gr()
 Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
 
@@ -889,7 +699,7 @@ SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,par
 SteadyDeformation2 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, 2*k, 2*C)
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
-#BUG
+
 gr()
 Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
 
@@ -922,7 +732,6 @@ end
 accelerations = CalculateAccelerations(deformations,tVals_short)
 
 gr()
-#TODO: Implement.
 Graph10AccelerationTimes(accelerations,xVals_short,tVals_short,parameters, false, [-0.1,0.1], colours, "Acc_", graphName)
 
 
@@ -1007,7 +816,7 @@ SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,par
 SteadyDeformation2 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, 2k, 2C)
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
-#BUG
+
 gr()
 Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
 
