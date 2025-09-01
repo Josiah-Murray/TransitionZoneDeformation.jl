@@ -5,8 +5,9 @@ using JLD
 
 println(pwd())
 
-DataPath = "Paper/Data"
+DataPath = "Paper--Moving point force/Data"
 functionFolder = "../Arbitrary Transition Zones"
+figureFolder = "Paper--Moving point force/Figures"
 
 include(joinpath(functionFolder, "Functions - Inversion schemes.jl"))
 include(joinpath(functionFolder, "Functions - MPF_ArbitraryTZs.jl"))
@@ -46,7 +47,7 @@ background_dark]
 #||||||||||||||||||||||\
 
 #Perform fresh calculations or load from old?
-LoadFlag = true
+LoadFlag = false
 #Save calculations from file?
 SaveFlag = false
 
@@ -134,6 +135,95 @@ end
 
 
 
+#||||| A version of the CalcDynamicDeformation function which ensures that the
+#Laplace space function uses the Float64 data type for its calculations.
+#This is for evaluation of the GWR algorithm.
+
+function CalcDynamicDeformationF64(xVals,tVals, parameters, inversionMethod)
+  if parameters[end] == 0
+    #TODO Implement v=0?
+    @error "CalcDynamicDeformation unimplemented for v=0"
+    return NaN
+  end
+  deformations = inversionMethod(xVals, tVals, LaplaceSpaceFunctionMovingPointForce1TZF64, parameters)
+  return deformations
+end
+#||||||||||||||||||||||||||||||||||||||||||||
+
+#See Above.
+function LaplaceSpaceFunctionMovingPointForce1TZF64(x, s, parameters; Coeff_solver = CoefficientSolverMovingPointForce1TZ)
+
+  Dt = Float64
+  x  = convert(Dt, x)
+
+  #We convert here so that we don't have to know ahead of time what type we'll need and can let the inversion implementation decide.
+  EI, m, xp, xtz_list, P, v = parameters
+  EI = convert(Dt, EI)
+  m  = convert(Dt,  m)
+  xp = convert(Dt, xp)
+  P  = convert(Dt,  P)
+  v  = convert(Dt,  v)
+  parameters = [EI, m, xp, xtz_list, P, v]
+
+  #Set the correct parameters.
+  #Default to the furthest right parameters, override if we are to the left.
+  k = xtz_list[end].k_right
+  C = xtz_list[end].C_right
+  for tz in xtz_list
+    if real(x) < tz.location
+      k = tz.k_left
+      C = tz.C_left
+      break
+    end
+  end
+
+
+  #||--Find r values--||#
+  #Only used for graphing appropriately
+  rVals = RValues(s, EI, m, C, k)
+  r1, r2, r3, r4 = rVals
+
+
+  #||--Find b values--||#
+  #Solve for the undetermined coefficients by solving a linear system
+  bVals = Coeff_solver(s, parameters)
+
+  #Find correct segment to isolate the coefficients we need for this x value
+  segment = 1
+  pointForceAdded = false
+  for tz in xtz_list
+    if ~pointForceAdded && xp < tz.location
+      pointForceAdded = true
+      if real(x) < xp
+        break
+      else
+        segment += 1
+      end
+    end
+    if real(x) < tz.location
+      break
+    else
+      segment += 1
+    end
+  end
+  if ~pointForceAdded
+    segment += 1
+  end
+
+  #Pull out correct b values
+  b1,b2,b3,b4 =  bVals[4*(segment-1) + 1], bVals[4*(segment-1) + 2], bVals[4*(segment-1) + 3], bVals[4*(segment-1) + 4]
+
+
+  #||--Construct Laplace-space function--||#
+
+  ŷ = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x,s, parameters, C, k, 0) +   (P/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C*s + k )  )*Heaviside((x-xp)/v)
+
+  return ŷ
+
+end
+
+
+
 
 
 #||||||||||||||||||||||/
@@ -185,7 +275,7 @@ SteadyStateDeformations = [SteadyDeformation1]
 
 
 gr()
-Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
 
 
 
@@ -217,7 +307,7 @@ SteadyStateDeformations = [SteadyDeformation1]
 
 
 gr()
-Graph10Times(deformations,xVals_fast,tVals10_fast,parameters,SteadyStateDeformations, false, colours, "", graphName)
+Graph10Times(deformations,xVals_fast,tVals10_fast,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
 
 
 
@@ -252,20 +342,39 @@ SteadyStateDeformations = [SteadyDeformation1]
 
 
 gr()
-Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
 
 
 
 #MARK: GWR Demo
+graphName = "GWR_default"
 
-#TODO
+leftTZ = TransitionZone(0.5, k, k, C, C)
+xtz_list = [leftTZ]
 
-#=
+parameters = [EI, m, xp, xtz_list, P, v_short]
 
-Add in code to provide an example of recovering travelling wave using GWR
+M = 20
+setprecision(BigFloat, M*3)
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> GWRImplementation_memo(xVals,tVals,LaplaceSpaceFunction, parameters, M)
 
-=#
 
+if !LoadFlag#BUG
+  deformations = @time CalcDynamicDeformationF64(xVals_short, tVals10_short, parameters, inversionMethod)
+  if SaveFlag
+    save(DataPath*"/"*graphName*".jld", "deformations", deformations)
+  end
+else
+  deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+end
+
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
+SteadyStateDeformations = [SteadyDeformation1]
+
+
+gr()
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
 
 
 
@@ -359,8 +468,8 @@ plot!(xlabel="Time (s)")
 plot!(ylabel = "Error")
 
 display(p)
-savefig(p, ""*graphName*".png")
-savefig(p, ""*graphName*".pdf")
+savefig(p, figureFolder*"/"*graphName*".png")
+savefig(p, figureFolder*"/"*graphName*".pdf")
 
 
 
@@ -452,9 +561,90 @@ plot!(xlabel="Time (s)")
 plot!(ylabel = "Error")
 
 display(p)
-savefig(p, ""*graphName*".png")
-savefig(p, ""*graphName*".pdf")
+savefig(p, figureFolder*"/"*graphName*".png")
+savefig(p, figureFolder*"/"*graphName*".pdf")
 
+
+#||--MARK:Errors GWR
+#(Generate graph showing error over time for varying N and R)
+
+
+
+leftTZ = TransitionZone(0.5, k, k, C, C)
+xtz_list = [leftTZ]
+
+
+parameters = [EI, m, xp, xtz_list, P, v_short]
+
+
+
+
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_short,tVals10_short,parameters, k, C)
+SteadyStateDeformations = [SteadyDeformation1]
+
+#Some investigation of error using varying parameters (iParameters)
+function CompareGWRMethod(xVals, tVals, parameters, MVals, SteadyStateDeformations)
+
+  errorList = Any[]
+
+  for M in MVals
+
+    println("M: ", M)
+    setprecision(BigFloat, M*3)
+
+    inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> GWRImplementation_memo(xVals,tVals,LaplaceSpaceFunction, parameters, M)
+
+    deformations = @time CalcDynamicDeformation(xVals, tVals, parameters, inversionMethod)
+
+    push!(errorList, CompareToTravellingWave(xVals,tVals, deformations, SteadyStateDeformations))
+
+
+  end
+  return errorList
+end
+
+
+iParameters = [20, 40, 60, 80, 100]
+
+
+
+graphName = "GWR_steadyState_Comparison"
+if !LoadFlag
+  errorList = CompareGWRMethod(xVals_short,tVals10_short, parameters, iParameters, SteadyDeformation1)
+  if SaveFlag
+    save(DataPath*"/"*graphName*".jld", "errorList", errorList)
+  end
+else
+  errorList = load(DataPath*"/"*graphName*".jld")["errorList"]
+end
+normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
+errorList_normed = errorList./normalFactor
+
+
+normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
+errorList_normed = errorList./normalFactor
+
+
+
+
+
+gr()
+p=plot()
+
+
+for i in eachindex(errorList)
+  local p=plot!(tVals10_short, errorList_normed[i], yaxis=:log, xlims=[tVals10_short[1], tVals10_short[end]], lw=3, box=:box, label = "M = "*string(iParameters[i]), markershape = :cross,  markersize = 7)
+end
+plot!(legend=:outerright)
+p = plot!(ylims = [10^-7, 1])
+
+plot!(xlabel="Time (s)")
+plot!(ylabel = "Error")
+
+display(p)
+savefig(p, figureFolder*"/"*graphName*".png")
+savefig(p, figureFolder*"/"*graphName*".pdf")
 
 
 #||--MARK: Errors Weeks v30
@@ -519,8 +709,8 @@ plot!(xlabel="Time (s)")
 plot!(ylabel = "Error")
 
 display(p)
-savefig(p, ""*graphName*".png")
-savefig(p, ""*graphName*".pdf")
+savefig(p, figureFolder*"/"*graphName*".png")
+savefig(p, figureFolder*"/"*graphName*".pdf")
 
 
 
@@ -607,8 +797,8 @@ plot!(xlabel="Time (s)")
 plot!(ylabel = "Error")
 
 display(p)
-savefig(p, ""*graphName*".png")
-savefig(p, ""*graphName*".pdf")
+savefig(p, figureFolder*"/"*graphName*".png")
+savefig(p, figureFolder*"/"*graphName*".pdf")
 
 
 
@@ -666,7 +856,7 @@ SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
 
 gr()
-Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
 
 
 
@@ -701,7 +891,7 @@ SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
 
 gr()
-Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
 
 #MARK: Acceleration
 
@@ -774,7 +964,7 @@ SteadyDeformation2 = SteadyStateTravellingSolution(xVals_short,tVals10_short,par
 SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
 gr()
-Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
 
 
 
@@ -818,7 +1008,7 @@ SteadyStateDeformations = [SteadyDeformation1, SteadyDeformation2]
 
 
 gr()
-Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, "", graphName)
+Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
 
 
 
