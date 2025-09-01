@@ -341,7 +341,8 @@ function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, par
         s_max  = maximum(s)
         s_min = minimum(s)
         if s_min < yLims[1]
-          yLims[1] = maximum(s)
+          #yLims[1] = maximum(s)
+          yLims[1] = s_min
         end
         if s_max > yLims[2]
           yLims[2] = s_max
