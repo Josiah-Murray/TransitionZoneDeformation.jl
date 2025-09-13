@@ -49,7 +49,7 @@ background_dark]
 #Perform fresh calculations or load from old?
 LoadFlag = false
 #Save calculations from file?
-SaveFlag = false
+SaveFlag = true
 
 
 #||||||||||||||||||||||/
@@ -279,7 +279,7 @@ Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeform
 
 
 
-#||--#MARK: Weeks' fast demo
+#||--#MARK: Weeks'  demo fast
 graphName = "Demonstration_fast_TravellingWave"
 
 leftTZ = TransitionZone(0.5, k, k, C, C)
@@ -308,6 +308,7 @@ SteadyStateDeformations = [SteadyDeformation1]
 
 gr()
 Graph10Times(deformations,xVals_fast,tVals10_fast,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
+
 
 
 
@@ -345,6 +346,36 @@ gr()
 Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
 
 
+#||--#MARK: DQ demo fast
+graphName = "Demonstration_fast_DQ"
+
+leftTZ = TransitionZone(0.5, k, k, C, C)
+xtz_list = [leftTZ]
+
+parameters = [EI, m, xp, xtz_list, P, v_fast]
+
+laplaceParameters = [3200,1000]
+
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> directQuadratureMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, laplaceParameters)
+
+if !LoadFlag
+  deformations = @time CalcDynamicDeformation(xVals_fast, tVals10_fast, parameters, inversionMethod)
+  if SaveFlag
+    save(DataPath*"/"*graphName*".jld", "deformations", deformations)
+  end
+else
+  deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+end
+
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_fast,tVals10_fast,parameters, k, C)
+SteadyStateDeformations = [SteadyDeformation1]
+
+
+gr()
+Graph10Times(deformations,xVals_fast,tVals10_fast,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
+
+
 
 #MARK: GWR Demo
 graphName = "GWR_default"
@@ -360,7 +391,7 @@ inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> GWRImplemen
 
 
 if !LoadFlag#BUG
-  deformations = @time CalcDynamicDeformationF64(xVals_short, tVals10_short, parameters, inversionMethod)
+  deformations = @time CalcDynamicDeformation(xVals_short, tVals10_short, parameters, inversionMethod)
   if SaveFlag
     save(DataPath*"/"*graphName*".jld", "deformations", deformations)
   end
@@ -376,6 +407,35 @@ SteadyStateDeformations = [SteadyDeformation1]
 gr()
 Graph10Times(deformations,xVals_short,tVals10_short,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
 
+
+#||--#MARK: GWR demo fast
+graphName = "Demonstration_fast_GWR"
+
+leftTZ = TransitionZone(0.5, k, k, C, C)
+xtz_list = [leftTZ]
+
+parameters = [EI, m, xp, xtz_list, P, v_fast]
+
+M = 200
+setprecision(BigFloat, M*3)
+inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> GWRImplementation_memo(xVals,tVals,LaplaceSpaceFunction, parameters, M)
+
+if !LoadFlag
+  deformations = @time CalcDynamicDeformation(xVals_fast, tVals10_fast, parameters, inversionMethod)
+  if SaveFlag
+    save(DataPath*"/"*graphName*".jld", "deformations", deformations)
+  end
+else
+  deformations = load(DataPath*"/"*graphName*".jld")["deformations"]
+end
+
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_fast,tVals10_fast,parameters, k, C)
+SteadyStateDeformations = [SteadyDeformation1]
+
+
+gr()
+Graph10Times(deformations,xVals_fast,tVals10_fast,parameters,SteadyStateDeformations, false, colours, figureFolder*"/", graphName)
 
 
 
@@ -647,6 +707,10 @@ savefig(p, figureFolder*"/"*graphName*".png")
 savefig(p, figureFolder*"/"*graphName*".pdf")
 
 
+
+
+
+
 #||--MARK: Errors Weeks v30
 #(Generate error over time for changing N with v=30)
 
@@ -803,6 +867,87 @@ savefig(p, figureFolder*"/"*graphName*".pdf")
 
 
 
+
+#||--MARK:Errors GWR v30
+#(Generate graph showing error over time for varying N and R)
+
+
+
+leftTZ = TransitionZone(0.5, k, k, C, C)
+xtz_list = [leftTZ]
+
+
+parameters = [EI, m, xp, xtz_list, P, v_fast]
+
+
+
+
+
+SteadyDeformation1 = SteadyStateTravellingSolution(xVals_fast,tVals10_fast,parameters, k, C)
+SteadyStateDeformations = [SteadyDeformation1]
+
+#Some investigation of error using varying parameters (iParameters)
+function CompareGWRMethod(xVals, tVals, parameters, MVals, SteadyStateDeformations)
+
+  errorList = Any[]
+
+  for M in MVals
+
+    println("M: ", M)
+    setprecision(BigFloat, M*3)
+
+    inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> GWRImplementation_memo(xVals,tVals,LaplaceSpaceFunction, parameters, M)
+
+    deformations = @time CalcDynamicDeformation(xVals, tVals, parameters, inversionMethod)
+
+    push!(errorList, CompareToTravellingWave(xVals,tVals, deformations, SteadyStateDeformations))
+
+
+  end
+  return errorList
+end
+
+
+iParameters = [20, 50, 100, 150, 200]
+
+
+
+graphName = "GWR_steadyState_Comparison_v30"
+if !LoadFlag
+  errorList = CompareGWRMethod(xVals_fast,tVals10_fast, parameters, iParameters, SteadyDeformation1)
+  if SaveFlag
+    save(DataPath*"/"*graphName*".jld", "errorList", errorList)
+  end
+else
+  errorList = load(DataPath*"/"*graphName*".jld")["errorList"]
+end
+normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
+errorList_normed = errorList./normalFactor
+
+
+normalFactor = max( abs(minimum(SteadyDeformation1)), maximum(SteadyDeformation1)  )
+errorList_normed = errorList./normalFactor
+
+
+
+
+
+gr()
+p=plot()
+
+
+for i in eachindex(errorList)
+  local p=plot!(tVals10_fast, errorList_normed[i], yaxis=:log, xlims=[tVals10_fast[1], tVals10_fast[end]], lw=3, box=:box, label = "M = "*string(iParameters[i]), markershape = :cross,  markersize = 7)
+end
+plot!(legend=:outerright)
+p = plot!(ylims = [10^-8, 1])
+
+plot!(xlabel="Time (s)")
+plot!(ylabel = "Error")
+
+display(p)
+savefig(p, figureFolder*"/"*graphName*".png")
+savefig(p, figureFolder*"/"*graphName*".pdf")
 
 
 
