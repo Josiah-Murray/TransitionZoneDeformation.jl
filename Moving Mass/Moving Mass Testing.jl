@@ -93,7 +93,7 @@ function CalcDynamicDeformationMM(xVals, tVals, parameters)
     Δτ = subTVals[2]-subTVals[1]
 
     #Calculate space indendent Green’s function values. Used in calculation of {Q_i}.
-    g_vt_vτ_tmτ = [GreensFunction(v*t, v*τ, t-τ, parameters) for τ in subTVals]
+    g_vt_vτ_tmτ = [InvertedGreensFunction(v*t, v*τ, t-τ, parameters) for τ in subTVals]
 
     #Calculate {Q_i} i=0,...,n
     #Calculate reaction forces at each sub-time step.
@@ -103,7 +103,7 @@ function CalcDynamicDeformationMM(xVals, tVals, parameters)
     for (xi, x) in enumerate(xVals)
 
       #Calculate space dependent Green’s function values. Used in calculation of w_c(x,t).
-      g_x_vτ_tmτ = [GreensFunction(x, v*τ, t-τ, parameters) for τ in subTVals]
+      g_x_vτ_tmτ = [InvertedGreensFunction(x, v*τ, t-τ, parameters) for τ in subTVals]
 
 
       #TODO: Calculate w_c^L
@@ -133,13 +133,70 @@ end
 
 #TODO: Implement.
 #MARK: Green's Function
-#Calculates the Green’s function for the beam at position x and time t due to a unit impulse at time τ.
+
+
+#Laplace domain Green's function calculation.
+#Calculates the Laplace domain Green's function G(x,ξ,s) for the beam at position x due to a unit impulse at position ξ.
+#Inputs:
+# x: The spatial position at which to calculate the Green's function.
+# ξ_index: The index of the impulse position in the spatial discretisation. (Note that due to the discretisation, ξ must be one of the x values).
+# s: The Laplace domain variable.
+# parameters: A ParameterStruct object containing the relevant model parameters.
+function LaplaceDomainGreensFunction(x,ξ_index,s,parameters)
+  #Extract parameters.
+  EI = parameters.EI
+  ρ = parameters.ρ
+  v = parameters.v
+  Q0 = parameters.Q0
+  M = parameters.M
+  TZ = parameters.TZ
+  L = TZ.L
+
+  Δx = x[2]-x[1]
+
+  #Set up the system of equations to solve for the Greens function in the Laplace domain.
+  LHSMatrix = zeros(Complex{eltype(x)}, length(x), length(x))
+
+  RHSVector = zeros(Complex{eltype(x)}, length(x))
+  if(ξ_index == 1  || ξ_index == length(x) || ξ_index == length(x)-1 || ξ_index == 2) #BUG This is designed for clamped boundary conditions.
+    #RHSVector[ξ_index] = 2/(EI*Δx) #Impulse at position ξ at boundary. #TODO: How should I actually handle this?
+  else
+    RHSVector[ξ_index] = 1/(EI*Δx) #Impulse at position ξ.
+  end
+
+  #Fill in LHSMatrix.
+  for (xi, x) in enumerate(x[3:end-2])
+    k = tz.k_interpolant(x)
+    C = tz.C_interpolant(x)
+
+    LHSMatrix[xi, xi-2:xi+2] = [ 1/(Δx^4) , -4/(Δx^4) , 6/(Δx^4)  + ρ*s^2 + C*s + k, -4/(Δx^4) , 1/(Δx^4)  ]
+
+  end
+
+
+  #BUG: Clamped boundary conditions. Pretty sure this is correct? Does Laplace mess with this?
+  LHSMatrix[1,1] = 1 #w(0) = 0
+  LHSMatrix[end,end] = 1 #w(L) = 0
+  LHSMatrix[2,1] = 1 #w'(0) = 0
+  LHSMatrix[end-1,end] = 1 #w'(L) = 0
+
+  #Solve the system of equations.
+  ĝ = LHSMatrix\RHSVector
+  return ĝ
+
+
+end
+
+
+
+#TODO: Implement.
+#Calculates the time domain inversion of the Laplace domain Green’s function for the beam at position x and time t due to a unit impulse at time τ.
 #Inputs:
 # x: The spatial position at which to calculate the Green’s function.
 # t: The time at which to calculate the Green’s function.
-# τ: The time at which the impulse occurs.
+# ξ: The impulse position.
 # parameters: A ParameterStruct object containing the relevant model parameters.
-function GreensFunction(x, t, τ, parameters)
+function InvertedGreensFunction(x, ξ, t, parameters)
   #Extract parameters.
   EI = parameters.EI
   ρ = parameters.ρ
@@ -190,7 +247,7 @@ function CalculateReactionForces(g, subTVals, parameters)
      + w_c_IC_vt_t -u_0 + uDot_0*t #TODO: Pass in w_c_IC(v*t, t) properly.
 
     #Calculate Q_i
-    Q[i+1] = NonLinearSolve(Q_n ->  (Q_n/c_H)^(2/3) - R(Q_n)*Heaviside(R(Q_n)), Q[i]) #Initial guess is previous value. #BUG: 2/3 or 3/2?
+    Q[i+1] = NonLinearSolve(Q_n ->  ((Q_n/c_H)^(2/3) - R(Q_n)*Heaviside(R(Q_n)) ), Q[i]) #Initial guess is previous value. #BUG: 2/3 or 3/2?
   end
 
 
@@ -200,6 +257,10 @@ function CalculateReactionForces(g, subTVals, parameters)
   return Q
 end
 
+#TODO: Implement.
+function NonLinearSolve(f, initial_guess)
+  return initial_guess #TODO: Implement
+end
 
 
 #MARK: Utilities
