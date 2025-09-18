@@ -110,10 +110,9 @@ function CalcDynamicDeformationMM(numXVals, parameters)
     for (τi, τ) in enumerate(τVals)
       GreensFunctions[:,:,τi] =  InvertedGreensFunction(xVals, xVals, t- τ, parameters)
     end
-    #GreensFunctions = InvertedGreensFunction(xVals, xVals, t*ones(length(τVals))- τVals, parameters) #TODO: Figure out how to do this properly. Should I calculate for every x and ξ value and then just pull the ones I need?
-
+    #GreensFunctions = InvertedGreensFunction(xVals, xVals, t*ones(length(τVals))- τVals, parameters)
     #Calculate space indendent Green’s function values. Used in calculation of {Q_i}.
-    #g_vt_vτ_tmτ = [InvertedGreensFunction(v*t, v*τ, t-τ, parameters) for τ in subTVals] #TODO: Figure out how to do this properly. Should I calculate for every x and ξ value and then just pull the ones I need?
+    #g_vt_vτ_tmτ = [InvertedGreensFunction(v*t, v*τ, t-τ, parameters) for τ in subTVals]
     g_vt_vτ_tmτ = [GreensFunctions[ti*timeStepOffset, τi, τi] for τi in eachindex(τVals)] #BUG: Is this right?
     #Calculate {Q_i} i=0,...,n
     #Calculate reaction forces at each sub-time step.
@@ -127,10 +126,10 @@ function CalcDynamicDeformationMM(numXVals, parameters)
 
 
       #TODO: Calculate w_c^L
-      w_c_L = 0 #TODO: Replace with actual calculation.
+      w_c_L = 0
 
       #TODO: Calculate w_c^IC
-      w_c_IC = 0 #TODO: Replace with actual calculation.
+      w_c_IC = 0
       #Calculate w_c(x,t)
       w_c[xi, ti] = sum([ g_x_vτ_tmτ[i]*Q[end]*Heaviside(L-vτ)*(Δτ) for (τi, τ) in enumerate(τVals)]) + w_c_L + w_c_IC
     end
@@ -226,7 +225,7 @@ function InvertedGreensFunction(xVals, ξVals, t, parameters)
   s -> LaplaceDomainGreensFunction(xVals, ξVals, s, parameters)
 
 
-  return 0 #TODO: Implement
+  return 0
 end
 
 #MARK: Reaction Forces
@@ -279,7 +278,7 @@ end
 
 #TODO: Implement.
 function NonLinearSolve(f, initial_guess)
-  return initial_guess #TODO: Implement
+  return initial_guess
 end
 
 
