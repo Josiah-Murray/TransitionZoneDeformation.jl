@@ -21,7 +21,7 @@ The function  'CalcDynamicDeformationMM' is the one that is intended to be calle
 
 #Import my Laplace inversion module.
 include("LaplaceInversionAdress/ImportNILaplaceModule.jl")
-
+using LinearAlgebra: det #BUG for testing
 
 
 #MARK: Structs
@@ -58,6 +58,21 @@ struct ParameterStruct
   uDot_0#<:Real #Initial velocity of the moving mass.
 end
 
+#Construct a default ParameterStruct object.
+#Based on the 'keyword definition pattern' from 'Hands on Design Patterns and Best Practices in Julia' by Tom Kwong.
+function ParameterStruct(;
+  EI,
+  ρ,
+  v,
+  Q0,
+  M,
+  TZ,
+  u_0,
+  uDot_0
+  )
+  return ParameterStruct(EI, ρ, v, Q0, M, TZ, u_0, uDot_0)
+end
+
 
 
 
@@ -80,15 +95,19 @@ function CalcDynamicDeformationMM(numXVals, parameters)
   Q0 = parameters.Q0
   M = parameters.M
   TZ = parameters.TZ
+  u_0 = parameters.u_0
+  uDot_0 = parameters.uDot_0
   L = TZ.L
 
   #Define discretisation.
   N = numXVals - 1 #Number of intervals.
   Δx = L/N #Spatial step size.
-  timeStepOffset = 3 #Only calculate for every timeStepOffset time steps to reserve x-values for the necessary integrations in terms of τ.
+  #BUG: Consider removing timeStepOffset and just using numXVals for both space and time discretisation.
+  #TODO: Think about timeStepOffset and how it should work
+  timeStepOffset = 2 #Only calculate for every timeStepOffset time steps to reserve x-values for the necessary integrations in terms of τ.
   Δt = timeStepOffset*Δx/v #Time step size.
   xVals = LinRange(0, L, numXVals) #Spatial discretisation.
-  tVals = LinRange(0, L/v, numXVals) #Time discretisation.
+  tVals = LinRange(0, L/v, Int(numXVals/timeStepOffset)) #Time discretisation.
 
 
   #Initialise the beam deformation array.
@@ -100,9 +119,9 @@ function CalcDynamicDeformationMM(numXVals, parameters)
   for (ti, t) in enumerate(tVals)
 
     #Setup time discretisation for use with Q_n calculation.
-    n = timeStepOffset*ti+1
+    n = timeStepOffset*ti
     τVals = LinRange(0, t, n)
-    Δτ = τVals[2]-τVals[1]
+    Δτ = Δt/timeStepOffset
 
     #Calculate the Green's function for each x value, each ξ (which are themselves x values), and each t-τ value.
     #TODO: Memoise this?
@@ -113,7 +132,7 @@ function CalcDynamicDeformationMM(numXVals, parameters)
     #GreensFunctions = InvertedGreensFunction(xVals, xVals, t*ones(length(τVals))- τVals, parameters)
     #Calculate space indendent Green’s function values. Used in calculation of {Q_i}.
     #g_vt_vτ_tmτ = [InvertedGreensFunction(v*t, v*τ, t-τ, parameters) for τ in subTVals]
-    g_vt_vτ_tmτ = [GreensFunctions[ti*timeStepOffset, τi, τi] for τi in eachindex(τVals)] #BUG: Is this right?
+    g_vt_vτ_tmτ = [GreensFunctions[(ti-1)*timeStepOffset+1, τi, τi] for τi in eachindex(τVals)] #BUG: Is this right?
     #Calculate {Q_i} i=0,...,n
     #Calculate reaction forces at each sub-time step.
     Q = CalculateReactionForces(g_vt_vτ_tmτ, τVals, parameters)
@@ -122,8 +141,8 @@ function CalcDynamicDeformationMM(numXVals, parameters)
     for (xi, x) in enumerate(xVals)
 
       #Calculate space dependent Green’s function values. Used in calculation of w_c(x,t).
-      g_x_vτ_tmτ = [InvertedGreensFunction(x, v*τ, t-τ, parameters) for τ in τVals] #TODO: Change to use `GreensFunctions` array.
-
+      #g_x_vτ_tmτ = [InvertedGreensFunction(x, v*τ, t-τ, parameters) for τ in τVals] #TODO: Change to use `GreensFunctions` array.
+      g_x_vτ_tmτ = [GreensFunctions[xi, τi, τi] for τi in eachindex(τVals)]
 
       #TODO: Calculate w_c^L
       w_c_L = 0
@@ -131,10 +150,11 @@ function CalcDynamicDeformationMM(numXVals, parameters)
       #TODO: Calculate w_c^IC
       w_c_IC = 0
       #Calculate w_c(x,t)
-      w_c[xi, ti] = sum([ g_x_vτ_tmτ[i]*Q[end]*Heaviside(L-vτ)*(Δτ) for (τi, τ) in enumerate(τVals)]) + w_c_L + w_c_IC
+      #BUG Seems to have issues...
+      w_c[xi, ti] = sum([ g_x_vτ_tmτ[τi]*Q[end]*Heaviside(L-v*τ)*(Δτ) for (τi, τ) in enumerate(τVals)]) + w_c_L + w_c_IC #TODO: Check g_x_vτ_tmτ[τi] has correct index.
     end
     #Calculate u
-    u[ti] = (-Q0/(2*M))*t^2 + u_0 + uDot_0*t + (1/M)*sum([ Q_n[i]*(t-τ)*(Δτ) for (i, τ) in enumerate(τVals)])
+    u[ti] = (-Q0/(2*M))*t^2 + u_0 + uDot_0*t + (1/M)*sum([ Q[τi]*(t-τ)*(Δτ) for (τi, τ) in enumerate(τVals)])
 
   end
 
@@ -152,12 +172,12 @@ end
 
 #Laplace domain Green's function calculation.
 #Calculates the Laplace domain Green's function G(x,ξ,s) for the beam at all xVals due to a unit impulse at position ξ.
-#Inputs:
+#Inputs: #TODO fix input description.
 # xVals: The positions at which to calculate the Green's function.
 # ξ_index: The index of the impulse position in the spatial discretisation. (Note that due to the discretisation, ξ must be one of the x values).
 # s: The Laplace domain variable.
 # parameters: A ParameterStruct object containing the relevant model parameters.
-function LaplaceDomainGreensFunction(xVals,ξ_index,s,parameters)
+function LaplaceDomainGreensFunction(xVals, ξVals, s,parameters)
   #Extract parameters.
   EI = parameters.EI
   ρ = parameters.ρ
@@ -167,37 +187,55 @@ function LaplaceDomainGreensFunction(xVals,ξ_index,s,parameters)
   TZ = parameters.TZ
   L = TZ.L
 
-  Δx = xVals[2]-xVals[1]
+  ḡMatrix = zeros(Complex{eltype(xVals)}, length(xVals), length(ξVals))
+  for (ξi, ξ) in enumerate(ξVals)
 
-  #Set up the system of equations to solve for the Greens function in the Laplace domain.
-  LHSMatrix = zeros(Complex{eltype(xVals)}, length(xVals), length(xVals))
+    ξ_index = findfirst(x -> x == ξ, xVals)
+    if  isnothing(ξ_index)
+      error("Impulse position ξ must be one of the x values in xVals.")
+    end
 
-  RHSVector = zeros(Complex{eltype(xVals)}, length(xVals))
-  if(ξ_index == 1  || ξ_index == length(xVals) || ξ_index == length(xVals)-1 || ξ_index == 2) #BUG This is designed for clamped boundary conditions.
-    #RHSVector[ξ_index] = 2/(EI*Δx) #Impulse at position ξ at boundary. #TODO: How should I actually handle this?
-  else
-    RHSVector[ξ_index] = 1/(EI*Δx) #Impulse at position ξ.
+    Δx = xVals[2]-xVals[1]
+
+    #Set up the system of equations to solve for the Greens function in the Laplace domain.
+    LHSMatrix = zeros(Complex{eltype(xVals)}, length(xVals), length(xVals))
+
+    RHSVector = zeros(Complex{eltype(xVals)}, length(xVals))
+    if(ξ_index == 1  || ξ_index == length(xVals) || ξ_index == length(xVals)-1 || ξ_index == 2) #BUG This is designed for clamped boundary conditions.
+      #RHSVector[ξ_index] = 2/(EI*Δx) #Impulse at position ξ at boundary. #TODO: How should I actually handle this?
+    else
+      RHSVector[ξ_index] = 1/(EI*Δx) #Impulse at position ξ.
+    end
+
+    #Fill in LHSMatrix.
+    for (xi, x) in enumerate(xVals[3:end-2])
+      k = TZ.k_interpolant(x)
+      C = TZ.C_interpolant(x)
+
+      LHSMatrix[xi+2, xi:xi+4] = [ 1/(Δx^4) , -4/(Δx^4) , 6/(Δx^4)  + ρ*s^2 + C*s + k, -4/(Δx^4) , 1/(Δx^4)  ]
+
+    end
+
+
+    #BUG: Clamped boundary conditions. Pretty sure this is correct? Does Laplace mess with this?
+    LHSMatrix[1,1] = 1 #w(0) = 0
+    LHSMatrix[end,end] = 1 #w(L) = 0
+    LHSMatrix[2,2] = 1 #w'(0) = 0
+    LHSMatrix[end-1,end-1] = 1 #w'(L) = 0
+
+    #BUG: Debug lines
+    #println("s: ",s)
+    #println("LHSMatrix:", LHSMatrix)
+    #Solve the system of equations.
+    if(det(LHSMatrix) == 0)
+      @error "LHSMatrix is singular. s=$s, ξ=$ξ"
+      display(LHSMatrix)
+    end
+    ḡ = LHSMatrix\RHSVector
+
+    ḡMatrix[:, ξi] = ḡ
   end
-
-  #Fill in LHSMatrix.
-  for (xi, x) in enumerate(xVals[3:end-2])
-    k = tz.k_interpolant(x)
-    C = tz.C_interpolant(x)
-
-    LHSMatrix[xi, xi-2:xi+2] = [ 1/(Δx^4) , -4/(Δx^4) , 6/(Δx^4)  + ρ*s^2 + C*s + k, -4/(Δx^4) , 1/(Δx^4)  ]
-
-  end
-
-
-  #BUG: Clamped boundary conditions. Pretty sure this is correct? Does Laplace mess with this?
-  LHSMatrix[1,1] = 1 #w(0) = 0
-  LHSMatrix[end,end] = 1 #w(L) = 0
-  LHSMatrix[2,1] = 1 #w'(0) = 0
-  LHSMatrix[end-1,end] = 1 #w'(L) = 0
-
-  #Solve the system of equations.
-  ĝ = LHSMatrix\RHSVector
-  return ĝ
+  return ḡMatrix
 
 
 end
@@ -222,10 +260,12 @@ function InvertedGreensFunction(xVals, ξVals, t, parameters)
   L = TZ.L
 
   #TODO: Implement numerical Laplace inversion.
-  s -> LaplaceDomainGreensFunction(xVals, ξVals, s, parameters)
+  if(t==0)
+    @warn "GWR cannot be evaluated at t=0. Returning 0."
+    return zeros( Complex{eltype(xVals)}, length(xVals), length(ξVals))
+  end
+   return NILaplace.GWR_array(s -> LaplaceDomainGreensFunction(xVals, ξVals, s, parameters), t, 20) #TODO Implement choice of M.
 
-
-  return 0
 end
 
 #MARK: Reaction Forces
@@ -258,6 +298,8 @@ function CalculateReactionForces(g, subTVals, parameters)
   Q[1] = Q0
 
   c_H = 1.1864*10^11 #Hertz constant as per Fărăgău et al. (2021).
+
+  w_c_IC_vt_t = 0#TODO: Pass in w_c_IC(v*t, t) properly.
 
   for i in 1:n
     t = subTVals[i+1]
