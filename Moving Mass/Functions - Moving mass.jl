@@ -150,7 +150,6 @@ function CalcDynamicDeformationMM(numXVals, parameters)
       #TODO: Calculate w_c^IC
       w_c_IC = 0
       #Calculate w_c(x,t)
-      #BUG Seems to have issues...
       w_c[xi, ti] = sum([ g_x_vτ_tmτ[τi]*Q[end]*Heaviside(L-v*τ)*(Δτ) for (τi, τ) in enumerate(τVals)]) + w_c_L + w_c_IC #TODO: Check g_x_vτ_tmτ[τi] has correct index.
     end
     #Calculate u
@@ -262,9 +261,9 @@ function InvertedGreensFunction(xVals, ξVals, t, parameters)
   #TODO: Implement numerical Laplace inversion.
   if(t==0)
     @warn "GWR cannot be evaluated at t=0. Returning 0."
-    return zeros( Complex{eltype(xVals)}, length(xVals), length(ξVals))
+    return zeros( Complex{eltype(xVals)}, length(xVals), length(ξVals))#BUG Implement better solution
   end
-   return NILaplace.GWR_array(s -> LaplaceDomainGreensFunction(xVals, ξVals, s, parameters), t, 20) #TODO Implement choice of M.
+  return NILaplace.GWR_array(s -> LaplaceDomainGreensFunction(xVals, ξVals, s, parameters), t, 20) #TODO Implement choice of M.
 
 end
 
