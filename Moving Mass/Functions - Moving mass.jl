@@ -86,7 +86,7 @@ end
 #Inputs:
 # numXVals: The number of x-points in the computational domain. The computational domain is [0, L] where L is the length of the transition zone.
 # parameters: A ParameterStruct object containing the relevant model parameters.
-function CalcDynamicDeformationMM(numXVals, parameters)
+function CalcDynamicDeformationMM(parameters, numXVals)
 
   #Extract parameters.
   EI = parameters.EI
@@ -129,6 +129,8 @@ function CalcDynamicDeformationMM(numXVals, parameters)
     for (τi, τ) in enumerate(τVals)
       GreensFunctions[:,:,τi] =  InvertedGreensFunction(xVals, xVals, t- τ, parameters)
     end
+
+
     #GreensFunctions = InvertedGreensFunction(xVals, xVals, t*ones(length(τVals))- τVals, parameters)
     #Calculate space indendent Green’s function values. Used in calculation of {Q_i}.
     #g_vt_vτ_tmτ = [InvertedGreensFunction(v*t, v*τ, t-τ, parameters) for τ in subTVals]
@@ -156,6 +158,7 @@ function CalcDynamicDeformationMM(numXVals, parameters)
     u[ti] = (-Q0/(2*M))*t^2 + u_0 + uDot_0*t + (1/M)*sum([ Q[τi]*(t-τ)*(Δτ) for (τi, τ) in enumerate(τVals)])
 
   end
+
 
   return w_c, u
 
@@ -263,8 +266,12 @@ function InvertedGreensFunction(xVals, ξVals, t, parameters)
     @warn "GWR cannot be evaluated at t=0. Returning 0."
     return zeros( Complex{eltype(xVals)}, length(xVals), length(ξVals))#BUG Implement better solution
   end
-  return NILaplace.GWR_array(s -> LaplaceDomainGreensFunction(xVals, ξVals, s, parameters), t, 20) #TODO Implement choice of M.
-
+  shift_parameter = 1 #Shifted to deal with non-decaying behaviour
+  return_vals =  NILaplace.GWR_array(s -> LaplaceDomainGreensFunction(xVals, ξVals, s + shift_parameter, parameters), t, 20)*exp(shift_parameter*t)  #TODO Implement choice of M.
+  if NaN ∈ return_vals
+    @warn "NaNs with t = $t" #BUG
+  end
+  return return_vals
 end
 
 #MARK: Reaction Forces
