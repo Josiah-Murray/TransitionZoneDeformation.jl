@@ -250,7 +250,7 @@ function N(x)
 end
 inversionMethod = (xVals, tVals,LaplaceSpaceFunction, parameters) -> WeeksMethodImplementation(xVals,tVals,LaplaceSpaceFunction, parameters, N)
 
-Weeks_benchmark = @benchmark CalcDynamicDeformation(xVals_fast, tVals10_fast, parameters, inversionMethod) samples= 10 evals=1 seconds=typemax(Int)
+Weeks_benchmarks = @benchmark CalcDynamicDeformation(xVals_fast, tVals10_fast, parameters, inversionMethod) samples= 10 evals=1 seconds=typemax(Int)
 save(DataPath*"/"*graphName*".jld", "Benchmark", Weeks_benchmarks)
 #GWR_benchmarks = load(DataPath*"/"*graphName*".jld", "Benchmark")
 
