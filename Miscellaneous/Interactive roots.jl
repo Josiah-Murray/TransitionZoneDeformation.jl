@@ -10,7 +10,7 @@ lsgrid = SliderGrid(
     fig[2,1],
     (label = "D", range = 0:1:1000, startvalue = 50)
     , (label = "Q", range = 0:1:1000, startvalue = 50)
-    , (label = "γ", range = -10:0.1:0, startvalue = -50)
+    , (label = "γ", range = -10:0.1:10, startvalue = 0)
     , (label = "s", range = 0:1:1000, startvalue = 50)
     , (label = "c", range = 0:1:1000, startvalue = 50))
 
@@ -30,7 +30,7 @@ end
 A = lsgrid.sliders[1].value
 
 function compute_roots(D, Q, γ, s, c)
-  f = Polynomial([-s^2/c^2, 0, (γ*s^2 +1), 0, Q, 0, D])
+  f = Polynomial([-s^2/c^2 , 0, (γ*s^2 +1), 0, Q, 0, D])
   f_roots = roots(f)
   return f_roots
 end
