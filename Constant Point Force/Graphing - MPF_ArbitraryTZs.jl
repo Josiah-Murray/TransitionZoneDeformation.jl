@@ -391,7 +391,7 @@ function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, par
     #gradLineColour = CustomGradient(i/length(tIndexes), colour2,colour1)
 
     #Plot line for moving point force
-    p = vline!([v*(tVals[i]) + xp], width=3, color=colours[4])
+    p = vline!([v*(tVals[i]) + xp], width=3, color=colours[4], linestyle=:dot)
 
 
 
@@ -485,7 +485,7 @@ function AccelerationMultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, t
     #gradLineColour = CustomGradient(i/length(tIndexes), colour2,colour1)
 
     #Plot line for moving point force
-    p = vline!([v*(tVals[i]) + xp], width=3, color=colours[4])
+    p = vline!([v*(tVals[i]) + xp], width=3, color=colours[4], linestyle=:dot)
 
 
 

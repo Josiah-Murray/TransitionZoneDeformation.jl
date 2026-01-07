@@ -1,4 +1,4 @@
-sqrt(-1)
+#sqrt(-1)
 using WAV #To play a sound when computation finished
 using Plots
 using JLD
@@ -6,7 +6,7 @@ using JLD
 println(pwd())
 
 DataPath = "Paper--Moving point force/Data"
-functionFolder = "../Arbitrary Transition Zones"
+functionFolder = "../Constant Point Force/"
 figureFolder = "Paper--Moving point force/Figures"
 
 include(joinpath(functionFolder, "Functions - Inversion schemes.jl"))
@@ -17,13 +17,17 @@ include(joinpath(functionFolder, "Graphing - MPF_ArbitraryTZs.jl"))
 #MARK: Colours
 #||||||||||||||||||||||\
 
-solidLine = RGB(0.5,0.2,0.4)
+solidLine = RGB(0.9,0.1,0.4)
+solidLine = RGB(0.8,0.2,0.4)
+solidLine = RGB(0,0,0)
 #solidLine = RGB(1,0,0.4)
 #solidLine = RGB(0.8,0.4,1)
 #solidLine = RGB(0.9,0.2,0.2)
 
 brokenLine = RGB(0.84901960784313725, 0.8274509803921569, 0.2549019607843137)
 brokenLine = RGB(0,0,0)
+brokenLine = RGB(0.8,0.2,0.4)
+brokenLine = RGB(0.9,0.2,0.4)
 
 
 transitionZoneLine = RGB(0,0,0)
@@ -47,9 +51,9 @@ background_dark]
 #||||||||||||||||||||||\
 
 #Perform fresh calculations or load from old?
-LoadFlag = false
+LoadFlag = true
 #Save calculations from file?
-SaveFlag = true
+SaveFlag = false
 
 
 #||||||||||||||||||||||/
@@ -1067,7 +1071,7 @@ end
 accelerations = CalculateAccelerations(deformations,tVals_short)
 
 gr()
-Graph10AccelerationTimes(accelerations,xVals_short,tVals_short,parameters, false, [-0.1,0.1], colours, "Acc_", graphName)
+Graph10AccelerationTimes(accelerations,xVals_short,tVals_short,parameters, false, [-0.1,0.1], colours, figureFolder*"/Acc_", graphName)
 
 
 
