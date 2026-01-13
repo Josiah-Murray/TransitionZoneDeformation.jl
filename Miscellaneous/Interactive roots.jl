@@ -31,7 +31,7 @@ A = lsgrid.sliders[1].value
 
 function compute_roots(D, Q, γ, s, c)
   f = Polynomial([-s^2/c^2 , 0, (γ*s^2 +1), 0, Q, 0, D])
-  f_roots = roots(f)
+  f_roots = Polynomials.roots(f)
   return f_roots
 end
 
@@ -47,6 +47,6 @@ end
 
 
 
-scatterplot = scatter!(ax1, @lift(real($points)), @lift(imag($points)), markersize=8, color=@lift(root_indicator($discriminant)))
+scatterplot = GLMakie.scatter!(ax1, @lift(real($points)), @lift(imag($points)), markersize=8, color=@lift(root_indicator($discriminant)))
 
 fig

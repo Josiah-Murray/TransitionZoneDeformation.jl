@@ -133,7 +133,7 @@ function colourGraphSegment(p, tz_list, xLeft, xRight, ylims, colour1, colour2)
 
 
   colour = CustomGradient(  (tz_list[1].k_left - k_min)/( k_max - k_min ), colour1, colour2  )
-  p = plot!(Shape( [ (xLeft,ylims[1]), (tz_list[1].location, ylims[1]),(tz_list[1].location, ylims[2]), (xLeft,ylims[2])    ]), color=colour)
+  p = plot!(Shape( [ (xLeft,ylims[1]), (tz_list[1].location, ylims[1]),(tz_list[1].location, ylims[2]), (xLeft,ylims[2])    ]), color=colour, linecolor = colour)
 
   if(length(tz_list)>1)
     for i in eachindex(tz_list[1:end-1])
@@ -143,13 +143,13 @@ function colourGraphSegment(p, tz_list, xLeft, xRight, ylims, colour1, colour2)
 
       #p = plot!(Shape( [ (xLeft,ylims[1]), (tz_list[1].location, ylims[1]),(tz_list[1].location, ylims[2]), (xLeft,ylims[2])    ]), color=colour1)
 
-      p = plot!(Shape( [ (tz_list[i].location,ylims[1]), (tz_list[i+1].location, ylims[1]),(tz_list[i+1].location, ylims[2]), (tz_list[i].location,ylims[2])    ]), color=colour)
+      p = plot!(Shape( [ (tz_list[i].location,ylims[1]), (tz_list[i+1].location, ylims[1]),(tz_list[i+1].location, ylims[2]), (tz_list[i].location,ylims[2])    ]), color=colour, linecolor = colour)
 
     end
   end
 
   colour = CustomGradient(  (tz_list[end].k_right - k_min)/( k_max - k_min ), colour1, colour2  )
-  p = plot!(Shape( [ (xRight,ylims[1]), (tz_list[end].location, ylims[1]),(tz_list[end].location, ylims[2]), (xRight,ylims[2])    ]), color=colour)
+  p = plot!(Shape( [ (xRight,ylims[1]), (tz_list[end].location, ylims[1]),(tz_list[end].location, ylims[2]), (xRight,ylims[2])    ]), color=colour, linecolor = colour)
 
 
 end
@@ -319,7 +319,7 @@ end
 #For a set of tIndexes (should probably be no more than about 5?), plot each of the
 #relevant deformation profiles on the same graph.
 #If no desired ylims or steady states, set these values to false.
-function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, parameters, steadyStateDeformations, yLims, colours)
+function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, parameters, steadyStateDeformations, yLims, colours; blank = false)
 
   #backgroundColour_min = RGB(0.9,0.9,0.95)
   #backgroundColour_max = RGB(0.7,0.7,0.8)
@@ -381,10 +381,15 @@ function MultiPlotTimeEvolution_ReturnPlotList(data, xVals, tVals, tIndexes, par
     #Colour in background for transition zones
     colourGraphSegment(p,tz_list, xLeft, xRight, yLims, backgroundColour_min, backgroundColour_max)
 
-    #plot lines for transition zones
-    for tz in tz_list
-      p = vline!([tz.location],color=colours[3], width=1, framestyle=:box)
+
+    if !blank
+      println("Blank is ", blank)
+      #plot lines for transition zones
+      for tz in tz_list
+        p = vline!([tz.location],color=colours[3], width=1, framestyle=:box)
+      end
     end
+
 
     ti = tIndexes[i]
 
@@ -513,8 +518,8 @@ end
 #For whatever reason, adding it to the function itself, doesn't help.
 #It also needs to be added before each call, not just once in the document.
 #As I have come to say often in my PhD, 'Everything is broken and I don't know why'.
-function Graph10Times(deformations, xVals, tVals, parameters, SteadyStateDeformations, ylims, colours, storageFolderPath, graphName)
-  p_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xVals, tVals, 1:10, parameters, SteadyStateDeformations, ylims, colours)
+function Graph10Times(deformations, xVals, tVals, parameters, SteadyStateDeformations, ylims, colours, storageFolderPath, graphName; blank = false)
+  p_list = MultiPlotTimeEvolution_ReturnPlotList(deformations, xVals, tVals, 1:10, parameters, SteadyStateDeformations, ylims, colours, blank = blank)
   p1 = plot(p_list[1:5]..., layout = grid(5,1), size = (1200,600))
   p2 = plot(p_list[6:10]..., layout = grid(5,1), size = (1200,600))
   p = plot(p1,p2, layout = grid(1,2), size = (1200,1200),leftmargin=10Plots.mm)

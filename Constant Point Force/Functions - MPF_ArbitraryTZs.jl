@@ -140,7 +140,7 @@ function LaplaceSpaceFunctionMovingPointForce1TZ(x, s, parameters; Coeff_solver 
   #||--Construct Laplace-space function--||#
 
   ŷ = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x,s, parameters, C, k, 0) +   (P/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (EI*s^4)/v^4 ) +m*s^2 + C*s + k )  )*Heaviside((x-xp)/v)
-
+  #ŷ =  ICResponse(x,s, parameters, C, k, 0)
   return ŷ
 
 end
