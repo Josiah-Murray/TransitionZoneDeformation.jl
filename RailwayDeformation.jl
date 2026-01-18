@@ -1,4 +1,11 @@
 module RailwayDeformation
+
+#External dependencies
+using PolynomialRoots
+
+
+
+#Internal dependencies
 include(joinpath(@__DIR__, "Submodules/RailDataStructures.jl"))
 using .RailDataStructures
 

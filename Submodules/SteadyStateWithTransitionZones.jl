@@ -1,8 +1,8 @@
 module SteadyStateWithTransitionZones
 #include(joinpath(@__DIR__, "RailDataStructures.jl"))
-using PolynomialRoots: roots
-using ..RailDataStructures
 
+using ..RailDataStructures
+using ..PolynomialRoots:roots
 
 
 
@@ -13,7 +13,7 @@ Calculate the deformation of an Euler-Bernoulli beam, with parameters `beamParam
 If a point force with strength P is desired, then the output can be simply multiplied by P due to the linearity of the system.
 A similar argument can be applied for multiple point forces.
 """
-function CalculateDeformation(xVals, x_p, beamParameters)
+function CalculateDeformation(xVals, x_p, beamParameters::RailDataStructures.RailParameters)
 
   mType = typeof(xVals[1])
   mType = mType <: Complex ? mType : Complex{mType}
