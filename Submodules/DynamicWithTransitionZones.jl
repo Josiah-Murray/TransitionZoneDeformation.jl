@@ -2,6 +2,7 @@ module SteadyStateWithTransitionZones
 #include(joinpath(@__DIR__, "RailDataStructures.jl"))
 
 using ..RailDataStructures
+using ..Utilities
 
 
 """

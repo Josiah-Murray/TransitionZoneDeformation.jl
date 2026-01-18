@@ -12,6 +12,8 @@ using .RailDataStructures
 include(joinpath(@__DIR__, "Submodules/SteadyStateWithTransitionZones.jl"))
 using .SteadyStateWithTransitionZones
 
+include(joinpath(@__DIR__, "Submodules/Utilities.jl"))
+using .Utilities
 
 """
     AppendTransitionZone(transitionZoneArray, position, k_right, C_right)
