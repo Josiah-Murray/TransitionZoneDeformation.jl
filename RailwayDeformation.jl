@@ -9,11 +9,20 @@ using PolynomialRoots
 include(joinpath(@__DIR__, "Submodules/RailDataStructures.jl"))
 using .RailDataStructures
 
-include(joinpath(@__DIR__, "Submodules/SteadyStateWithTransitionZones.jl"))
+include(joinpath(@__DIR__, "Submodules/Models/SteadyStateWithTransitionZones.jl"))
 using .SteadyStateWithTransitionZones
 
 include(joinpath(@__DIR__, "Submodules/Utilities.jl"))
 using .Utilities
+
+include(joinpath(@__DIR__, "Submodules/Models/DynamicWithTransitionZones.jl"))
+using .DynamicWithTransitionZones
+
+
+#WILL NEED TO BE CHANGED ON OTHER COMPUTERS. NILaplaceLocation should be a file pointing to the location of the NILaplace.jl file on the current computer.
+include(joinpath(@__DIR__, "NILaplaceLocation.jl"))
+using .NILaplace
+
 
 """
     AppendTransitionZone(transitionZoneArray, position, k_right, C_right)
