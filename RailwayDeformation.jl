@@ -23,6 +23,9 @@ using .DynamicWithTransitionZones
 include(joinpath(@__DIR__, "NILaplaceLocation.jl"))
 using .NILaplace
 
+include(joinpath(@__DIR__, "Submodules/LaplaceInversionImplementations.jl"))
+using .LaplaceInversionImplementations
+
 
 """
     AppendTransitionZone(transitionZoneArray, position, k_right, C_right)

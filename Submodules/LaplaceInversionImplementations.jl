@@ -1,5 +1,5 @@
 module LaplaceInversionImplementations
-
+using ..NILaplace
 
 """
     GWRImplementation(xVals, tVals, parameters, LaplaceFunction; M = 20, shift_parameter = 0)

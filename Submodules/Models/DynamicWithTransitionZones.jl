@@ -1,8 +1,17 @@
-module SteadyStateWithTransitionZones
+module DynamicWithTransitionZones
 #include(joinpath(@__DIR__, "RailDataStructures.jl"))
 
 using ..RailDataStructures
 using ..Utilities
+using ..PolynomialRoots: roots
+using ..Utilities: Heaviside
+
+
+
+
+
+
+
 
 
 """
@@ -22,19 +31,20 @@ function LaplaceDomainFunction(xVals, s, xp, v, beamParameters::RailDataStructur
 
   #||--Find b values--||#
   #Solve for the undetermined coefficients by solving a linear system
-  bVals = Coeff_solver(s, xp, v, beamParameters)
+  bVals = CoeffSolver(s, xp, v, beamParameters)
   ŷ = zeros(Complex{Dt}, length(xVals))
 
-  segment = 1 #For keeping track of which segment we are in, so that correct coefficient values can be pulled out.
-  pointForceAdded = false #We 'insert' an extra segment to account for the point force location.
-  for (xi, x) in enumerate(xVals)
 
+
+  for (xi, x) in enumerate(xVals)
+    segment = 1 #For keeping track of which segment we are in, so that correct coefficient values can be pulled out.
+    pointForceAdded = false #We 'insert' an extra segment to account for the point force location.
     #Set the correct parameters.
     #Default to the furthest right parameters, override if we are to the left.
     k = tzList[end].k_right
     C = tzList[end].C_right
     for tz in tzList
-      if real(x) < tz.location
+      if real(x) < tz.position
         k = tz.k_left
         C = tz.C_left
         break
@@ -53,7 +63,7 @@ function LaplaceDomainFunction(xVals, s, xp, v, beamParameters::RailDataStructur
     #TODO: Can probably combine with code for k and C above.
     #Find correct segment to isolate the coefficients we need for this x value
     for tz in tzList
-      if ~pointForceAdded && xp < tz.location
+      if ~pointForceAdded && xp < tz.position
         pointForceAdded = true
         if real(x) < xp
           break
@@ -61,7 +71,7 @@ function LaplaceDomainFunction(xVals, s, xp, v, beamParameters::RailDataStructur
           segment += 1
         end
       end
-      if real(x) < tz.location
+      if real(x) < tz.position
         break
       else
         segment += 1
@@ -79,7 +89,7 @@ function LaplaceDomainFunction(xVals, s, xp, v, beamParameters::RailDataStructur
 
 
     #TODO: Implement option for zero velocity.
-    ŷ[xi] = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x, s, v, beamParameters, C, k) +   (1/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (beamParameters.EI*s^4)/v^4 ) +beamParameters.m*s^2 + C*s + k )  )*Utilities.Heaviside((x-xp)/v)
+    ŷ[xi] = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x, s, v, xp, beamParameters, C, k) +   (1/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (beamParameters.EI*s^4)/v^4 ) +beamParameters.m*s^2 + C*s + k )  )*Utilities.Heaviside((x-xp)/v)
   end
 
   return ŷ
@@ -144,10 +154,10 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
 
 
   for i in eachindex(xtz_list)
-    tz::TransitionZone = xtz_list[i] #Type specified for ease of coding (i.e. autocomplete)
+    tz::RailDataStructures.TransitionZone = xtz_list[i] #Type specified for ease of coding (i.e. autocomplete)
     if(!pointForceAdded)
       #Check if point force is to left of transition zone
-      if(xp<tz.location)
+      if(xp<tz.position)
 
         #Add row associated with continuity at point force
         r1, r2, r3, r4 = RValues(s,EI,m, tz.C_left, tz.k_left)
@@ -159,7 +169,7 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
 
         #RHS Vector associated with point force
         for i = 1:4
-          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( 1/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   ) - ( ICResponse(xp+eps(Dt), s, parameters, tz.C_left, tz.k_left, i-1) - ICResponse(xp-eps(Dt), s, parameters, tz.C_left, tz.k_left, i-1) )
+          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( 1/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   ) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
         end
 
 
@@ -174,15 +184,15 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
     #----Add row associated with continuity at transition zone
     lr1, lr2, lr3, lr4 = RValues(s,EI,m, tz.C_left, tz.k_left)
     rr1, rr2, rr3, rr4 = RValues(s,EI,m, tz.C_right, tz.k_right)
-    continuitySubMatrix = [-exp(lr1*tz.location)  -exp(lr2*tz.location) -exp(lr3*tz.location) -exp(lr4*tz.location) exp(rr1*tz.location)  exp(rr2*tz.location) exp(rr3*tz.location) exp(rr4*tz.location)]
+    continuitySubMatrix = [-exp(lr1*tz.position)  -exp(lr2*tz.position) -exp(lr3*tz.position) -exp(lr4*tz.position) exp(rr1*tz.position)  exp(rr2*tz.position) exp(rr3*tz.position) exp(rr4*tz.position)]
     for i = 1:3
-      continuitySubMatrix = [continuitySubMatrix; -lr1^i*1exp(lr1*tz.location)  -lr2^i*exp(lr2*tz.location) -lr3^i*exp(lr3*tz.location) -lr4^i*exp(lr4*tz.location) rr1^i*exp(rr1*tz.location)  rr2^i*exp(rr2*tz.location) rr3^i*exp(rr3*tz.location) rr4^i*exp(rr4*tz.location) ]
+      continuitySubMatrix = [continuitySubMatrix; -lr1^i*1exp(lr1*tz.position)  -lr2^i*exp(lr2*tz.position) -lr3^i*exp(lr3*tz.position) -lr4^i*exp(lr4*tz.position) rr1^i*exp(rr1*tz.position)  rr2^i*exp(rr2*tz.position) rr3^i*exp(rr3*tz.position) rr4^i*exp(rr4*tz.position) ]
     end
     LHSMatrix = [LHSMatrix;     zeros(Complex{Dt}, 4, 4*(segment-1))      continuitySubMatrix     zeros(Complex{Dt}, 4, numRows-4*(segment-1)-8)  ]
 
     #RHS Vector
     for i = 1:4
-      RHS[2 + (segment-1)*4 + i] = (-s/v)^(i-1)*( 1*exp(-s*tz.location/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   ) - 1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_right*s + tz.k_right   )   )*Heaviside((tz.location-xp)/v) - ( ICResponse(tz.location, s, parameters, tz.C_right, tz.k_right, i-1) - ICResponse(tz.location, s, parameters, tz.C_left, tz.k_left, i-1) )
+      RHS[2 + (segment-1)*4 + i] = (-s/v)^(i-1)*( 1*exp(-s*tz.position/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   ) - 1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_right*s + tz.k_right   )   )*Heaviside((tz.position-xp)/v) - ( ICResponse(tz.position, s, v, xp, parameters, tz.C_right, tz.k_right, derivativeOrder = i-1) - ICResponse(tz.position, s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
     end
 
 
@@ -229,9 +239,11 @@ By default, it uses a travelling wave associated with the left-most beam segment
 
 This is an internal function and not intended to be called directly by the user.
 """
-function ICResponse(x, s, v, parameters::RailDataStructures.RailParameters, C, k; derivativeOrder::Int = 0, C_init = nothing, k_init = nothing)
+function ICResponse(x, s, v, xp, parameters::RailDataStructures.RailParameters, C, k; derivativeOrder::Int = 0, C_init = nothing, k_init = nothing)
   EI, m = parameters.EI, parameters.m
   Dt = real(typeof(s))
+
+  xtz_list = parameters.transitionZones
 
   if isnothing(C_init)
     C_init = xtz_list[1].C_left
