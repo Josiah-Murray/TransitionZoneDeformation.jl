@@ -35,7 +35,6 @@ function LaplaceDomainFunction(xVals, s, xp, v, beamParameters::RailDataStructur
   ŷ = zeros(Complex{Dt}, length(xVals))
 
 
-
   for (xi, x) in enumerate(xVals)
     segment = 1 #For keeping track of which segment we are in, so that correct coefficient values can be pulled out.
     pointForceAdded = false #We 'insert' an extra segment to account for the point force location.
@@ -62,26 +61,31 @@ function LaplaceDomainFunction(xVals, s, xp, v, beamParameters::RailDataStructur
 
     #TODO: Can probably combine with code for k and C above.
     #Find correct segment to isolate the coefficients we need for this x value
+    found = false#For checking if xp is left of the tranisiton zones
     for tz in tzList
       if ~pointForceAdded && xp < tz.position
         pointForceAdded = true
         if real(x) < xp
+          found = true
           break
         else
           segment += 1
         end
       end
       if real(x) < tz.position
+
+        found = true
         break
       else
         segment += 1
       end
     end
-    if ~pointForceAdded
+    if ~pointForceAdded && ~found
       segment += 1
     end
 
     #Pull out correct b values
+
     b1,b2,b3,b4 =  bVals[4*(segment-1) + 1], bVals[4*(segment-1) + 2], bVals[4*(segment-1) + 3], bVals[4*(segment-1) + 4]
 
 
@@ -130,14 +134,14 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
 
   Dt = real(typeof(s))
 
-  #Type of xtz_list specified so that autocomplete works.
-  xtz_list = parameters.transitionZones
+  #Type of tzList specified so that autocomplete works.
+  tzList = parameters.transitionZones
   EI, m, v = parameters.EI, parameters.m,  v
 
   #LHS matrix for system enforcing continuity conditions.
   #We need four rows for each continuity condition (1 for each tz and one for pf)
   #We also need four rows to enforce zero deformation at limits.
-  numRows = (length(xtz_list)+2)*4
+  numRows = (length(tzList)+2)*4
 
 
   #Initialise with first row (enforcing zero deformation at inf. on left)
@@ -153,8 +157,8 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
   segment = 1
 
 
-  for i in eachindex(xtz_list)
-    tz::RailDataStructures.TransitionZone = xtz_list[i] #Type specified for ease of coding (i.e. autocomplete)
+  for i in eachindex(tzList)#TODO: Switch to enumerate
+    tz::RailDataStructures.TransitionZone = tzList[i] #Type specified for ease of coding (i.e. autocomplete)
     if(!pointForceAdded)
       #Check if point force is to left of transition zone
       if(xp<tz.position)
@@ -165,7 +169,7 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
         for i = 1:3
           continuitySubMatrix = [continuitySubMatrix; -r1^i*1exp(r1*xp)  -r2^i*exp(r2*xp) -r3^i*exp(r3*xp) -r4^i*exp(r4*xp) r1^i*exp(r1*xp)  r2^i*exp(r2*xp) r3^i*exp(r3*xp) r4^i*exp(r4*xp) ]
         end
-        LHSMatrix = [LHSMatrix;     zeros(Complex{Dt}, 4, 4*(segment-1))      continuitySubMatrix     zeros(Complex{Dt}, 4, numRows-4*(segment-1)-8)  ]
+        LHSMatrix = [LHSMatrix;     zeros(Complex{Dt}, 4, 4*(segment-1))   continuitySubMatrix     zeros(Complex{Dt}, 4, numRows-4*(segment-1)-8)  ]
 
         #RHS Vector associated with point force
         for i = 1:4
@@ -199,6 +203,24 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
     segment += 1
   end
 
+  if(~pointForceAdded)
+    #Add row associated with continuity at point force
+        r1, r2, r3, r4 = RValues(s,EI,m, tzList[end].C_right, tzList[end].k_right)
+        continuitySubMatrix = [-exp(r1*xp)  -exp(r2*xp) -exp(r3*xp) -exp(r4*xp) exp(r1*xp)  exp(r2*xp) exp(r3*xp) exp(r4*xp)]
+        for i = 1:3
+          continuitySubMatrix = [continuitySubMatrix; -r1^i*1exp(r1*xp)  -r2^i*exp(r2*xp) -r3^i*exp(r3*xp) -r4^i*exp(r4*xp) r1^i*exp(r1*xp)  r2^i*exp(r2*xp) r3^i*exp(r3*xp) r4^i*exp(r4*xp) ]
+        end
+        LHSMatrix = [LHSMatrix;     zeros(Complex{Dt}, 4, 4*(segment-1))   continuitySubMatrix     zeros(Complex{Dt}, 4, numRows-4*(segment-1)-8)  ]
+
+        #RHS Vector associated with point force
+        for i = 1:4
+          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( 1/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tzList[end].C_right*s + tzList[end].k_right   )   ) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) )
+        end
+
+        pointForceAdded = true
+        segment += 1
+  end
+
   #add last row corresponding to zero deformation at inf. on right
   LHSMatrix = [LHSMatrix; zeros(Complex{Dt},2, numRows - 4) [ 1 0 0 0 ; 0 0 0 1] ]
 
@@ -209,6 +231,7 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
   catch
     @error "LHSMatrix contains NaN/inf"
     println("s value: ", s)
+    println(segment)
   end
 
 

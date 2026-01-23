@@ -4,17 +4,17 @@ include(joinpath(@__DIR__, "../RailwayDeformation.jl"))
 import .RailwayDeformation as RD
 
 
-transitionZones = [RD.RailDataStructures.TransitionZone( k_left = 4, k_right = 1, C_left = 0.5, C_right = 1, position = 4 )]
-transitionZones = RD.AppendTransitionZone(transitionZones, 6, 0.5, 0.5)
+transitionZones = [RD.RailDataStructures.TransitionZone( k_left = 4, k_right = 1, C_left = 0.5, C_right = 1, position = -2 )]
+transitionZones = RD.AppendTransitionZone(transitionZones,0, 4, 0.5)
 
 beamParameters = RD.RailDataStructures.RailParameters( EI = 1.0, m = 1.0, transitionZones = transitionZones )
 v = 1
-xp = -5
+xp = 2
 xVals = LinRange(-10, 10, 40)
 
 LaplaceDomainFunction = s -> RD.DynamicWithTransitionZones.LaplaceDomainFunction(xVals, s, xp, v, beamParameters)
 
-deformation = RD.LaplaceInversionImplementations.GWRImplementation(xVals, [0.2], beamParameters, LaplaceDomainFunction; M = 20, shift_parameter = 0)[ :, 1]
+deformation = RD.LaplaceInversionImplementations.GWRImplementation(xVals, [1.0], beamParameters, LaplaceDomainFunction; M = 20, shift_parameter = 0)[ :, 1]
 
 fillColours = [RGB(1,0,0) for j in eachindex(xVals)]
 
