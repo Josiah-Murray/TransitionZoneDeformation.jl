@@ -12,8 +12,6 @@ using ..Utilities: Heaviside
 
 
 
-
-
 """
     LaplaceDomainFunction(xVals, s, xp, v, beamParameters)
 
@@ -81,7 +79,13 @@ function LaplaceDomainFunction(xVals, s, xp, v, beamParameters::RailDataStructur
       end
     end
     if ~pointForceAdded && ~found
-      segment += 1
+      if real(x) < xp
+        pointForceAdded = true
+        found = true
+      else
+        segment += 1
+        found = true
+      end
     end
 
     #Pull out correct b values
@@ -91,10 +95,13 @@ function LaplaceDomainFunction(xVals, s, xp, v, beamParameters::RailDataStructur
 
     #||--Construct Laplace-space function--||#
 
-
-    #TODO: Implement option for zero velocity.
-    ŷ[xi] = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x, s, v, xp, beamParameters, C, k) +   (1/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (beamParameters.EI*s^4)/v^4 ) +beamParameters.m*s^2 + C*s + k )  )*Utilities.Heaviside((x-xp)/v)
+    if v ==0
+      ŷ[xi] = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x, s, v, xp, beamParameters, C, k)
+    else
+      ŷ[xi] = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x, s, v, xp, beamParameters, C, k) +   (1/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (beamParameters.EI*s^4)/v^4 ) +beamParameters.m*s^2 + C*s + k )  )*Utilities.Heaviside((x-xp)/v)
+    end
   end
+
 
   return ŷ
 end
@@ -130,13 +137,13 @@ Return the unknown coefficents for the Laplace-domain Euler-Bernoulli beam on a 
 
 This is an internal function and not intended to be called directly by the user.
 """
-function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #TODO: Update to allow for xp to be anywhere and not enforce zero in limits through system.
+function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #TODO: Update to not enforce zero in limits through system.
 
   Dt = real(typeof(s))
 
   #Type of tzList specified so that autocomplete works.
   tzList = parameters.transitionZones
-  EI, m, v = parameters.EI, parameters.m,  v
+  EI, m = parameters.EI, parameters.m
 
   #LHS matrix for system enforcing continuity conditions.
   #We need four rows for each continuity condition (1 for each tz and one for pf)
@@ -172,8 +179,14 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
         LHSMatrix = [LHSMatrix;     zeros(Complex{Dt}, 4, 4*(segment-1))   continuitySubMatrix     zeros(Complex{Dt}, 4, numRows-4*(segment-1)-8)  ]
 
         #RHS Vector associated with point force
-        for i = 1:4
-          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( 1/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   ) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
+        if v==0
+          for i = 1:4
+            RHS[2 + (segment-1)*4 + i] = (1/(s*EI))*(i==4) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
+          end
+        else
+          for i = 1:4
+            RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( 1/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   ) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
+          end
         end
 
 
@@ -194,10 +207,18 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
     end
     LHSMatrix = [LHSMatrix;     zeros(Complex{Dt}, 4, 4*(segment-1))      continuitySubMatrix     zeros(Complex{Dt}, 4, numRows-4*(segment-1)-8)  ]
 
+
     #RHS Vector
-    for i = 1:4
-      RHS[2 + (segment-1)*4 + i] = (-s/v)^(i-1)*( 1*exp(-s*tz.position/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   ) - 1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_right*s + tz.k_right   )   )*Heaviside((tz.position-xp)/v) - ( ICResponse(tz.position, s, v, xp, parameters, tz.C_right, tz.k_right, derivativeOrder = i-1) - ICResponse(tz.position, s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
+    if v == 0
+      for i = 1:4
+        RHS[2 + (segment-1)*4 + i] =  - ( ICResponse(tz.position, s, v, xp, parameters, tz.C_right, tz.k_right, derivativeOrder = i-1) - ICResponse(tz.position, s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
+      end
+    else
+      for i = 1:4
+        RHS[2 + (segment-1)*4 + i] = (-s/v)^(i-1)*( 1*exp(-s*tz.position/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   ) - 1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_right*s + tz.k_right   )   )*Heaviside((tz.position-xp)/v) - ( ICResponse(tz.position, s, v, xp, parameters, tz.C_right, tz.k_right, derivativeOrder = i-1) - ICResponse(tz.position, s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
+      end
     end
+
 
 
     segment += 1
@@ -213,8 +234,14 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
         LHSMatrix = [LHSMatrix;     zeros(Complex{Dt}, 4, 4*(segment-1))   continuitySubMatrix     zeros(Complex{Dt}, 4, numRows-4*(segment-1)-8)  ]
 
         #RHS Vector associated with point force
-        for i = 1:4
-          RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( 1/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tzList[end].C_right*s + tzList[end].k_right   )   ) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) )
+        if v == 0
+          for i = 1:4
+            RHS[2 + (segment-1)*4 + i] = (1/(s*EI))*(i==4) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) )
+          end
+        else
+          for i = 1:4
+            RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( 1/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tzList[end].C_right*s + tzList[end].k_right   )   ) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) )
+          end
         end
 
         pointForceAdded = true
@@ -237,15 +264,11 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
 
 
 
+  #System returns zero with a small floating point error; we explicitly set the relevant terms to zero.
   bVals[2] = zero(Dt)
   bVals[3] = zero(Dt)
   bVals[end] = zero(Dt)
   bVals[end-3] = zero(Dt)
-
-
-
-
-
 
 
   return bVals
@@ -258,11 +281,17 @@ end
 
 Returns the response of the Laplace-domain rail to the initial conditions at a position `x`, Laplace variable `s`, for rail parameters `parameters` (see #TODO: reference), foundation damping `C`, track modulus `k`.
 Changing the optional keyword parameter `derivativeOrder` will instead return the derivative of the response of order `derivativeOrder` with respect to time.
+For zero velocity, an undisturbed beam response is enforced, otherwise, the travelling wave solution for a homogeneous foundation is used.
 By default, it uses a travelling wave associated with the left-most beam segment. To change this, use the optional keyword parameters `C_init` and `k_init` to set the foundation damping and track modulus of the travelling wave solution.
 
 This is an internal function and not intended to be called directly by the user.
 """
 function ICResponse(x, s, v, xp, parameters::RailDataStructures.RailParameters, C, k; derivativeOrder::Int = 0, C_init = nothing, k_init = nothing)
+
+  if v == 0
+    return 0
+  end
+
   EI, m = parameters.EI, parameters.m
   Dt = real(typeof(s))
 
