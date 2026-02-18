@@ -95,11 +95,16 @@ function LaplaceDomainFunction(xVals, s, xp, v, beamParameters::RailDataStructur
 
     #||--Construct Laplace-space function--||#
 
+
     if v ==0
       ŷ[xi] = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x, s, v, xp, beamParameters, C, k)
     else
-      ŷ[xi] = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x, s, v, xp, beamParameters, C, k) +   (1/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (beamParameters.EI*s^4)/v^4 ) +beamParameters.m*s^2 + C*s + k )  )*Utilities.Heaviside((x-xp)/v)
+      ŷ[xi] = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x, s, v, xp, beamParameters, C, k) + ParticularResponse(x, s, v, xp, beamParameters, C, k)  #(1/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (beamParameters.EI*s^4)/v^4 ) +beamParameters.m*s^2 + C*s + k )  )*Utilities.Heaviside((x-xp)/v)
     end
+
+    ŷ[xi] = ParticularResponse(x, s, v, xp, beamParameters, C, k)
+    #ŷ[xi] = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) #BUG
+
   end
 
 
@@ -185,7 +190,8 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
           end
         else
           for i = 1:4
-            RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( 1/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   ) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
+            #RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( 1/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   )   ) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
+            RHS[2 + (segment-1)*4 + i] = ParticularResponse(xp-eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1 ) - ParticularResponse(xp+eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1 ) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
           end
         end
 
@@ -215,7 +221,8 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
       end
     else
       for i = 1:4
-        RHS[2 + (segment-1)*4 + i] = (-s/v)^(i-1)*( 1*exp(-s*tz.position/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   ) - 1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_right*s + tz.k_right   )   )*Heaviside((tz.position-xp)/v) - ( ICResponse(tz.position, s, v, xp, parameters, tz.C_right, tz.k_right, derivativeOrder = i-1) - ICResponse(tz.position, s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
+        #RHS[2 + (segment-1)*4 + i] = (-s/v)^(i-1)*( 1*exp(-s*tz.position/v)/abs(v)  )*(  1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_left*s + tz.k_left   ) - 1/( ( (EI*s^4)/v^4  ) +m*s^2 + tz.C_right*s + tz.k_right   )   )*Heaviside((tz.position-xp)/v)
+        RHS[2 + (segment-1)*4 + i] = ParticularResponse(tz.position, s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) - ParticularResponse(tz.position, s, v, xp, parameters, tz.C_right, tz.k_right, derivativeOrder = i-1) - ( ICResponse(tz.position, s, v, xp, parameters, tz.C_right, tz.k_right, derivativeOrder = i-1) - ICResponse(tz.position, s, v, xp, parameters, tz.C_left, tz.k_left, derivativeOrder = i-1) )
       end
     end
 
@@ -240,7 +247,9 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
           end
         else
           for i = 1:4
-            RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( 1/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tzList[end].C_right*s + tzList[end].k_right   )   ) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) )
+            #RHS[2 + (segment-1)*4 + i] = -(-s/v)^(i-1)*(  ( 1/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + tzList[end].C_right*s + tzList[end].k_right   )   ) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) )
+            RHS[2 + (segment-1)*4 + i] =  ParticularResponse(xp-eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) - ParticularResponse(xp+eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) - ( ICResponse(xp+eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) - ICResponse(xp-eps(Dt), s, v, xp, parameters, tzList[end].C_right, tzList[end].k_right, derivativeOrder = i-1) )
+
           end
         end
 
@@ -275,11 +284,28 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
 
 end
 
+"""
+    ParticularResponse(x, s, v, xp, parameters::RailDataStructures.RailParameters, C, k; derivativeOrder::Int = 0)
+
+Return the response of the Laplace domain function to the particular solution (associated with the moving point force) at a position `x` and Laplace variable `s`, where the point force begins at a point `xp` and moves with velocity `v`.
+Changing the optional parameter `derivativeOrder` instead returns the corresponding derivative in terms of the Laplace variable `s`.
+
+This is an internal function and not intended to be called directly by the user.
+"""
+function ParticularResponse(x, s, v, xp, parameters::RailDataStructures.RailParameters, C, k; derivativeOrder::Int = 0)
+  EI = parameters.EI
+  m = parameters.m
+  if (x-xp)/v > 0
+    return (-s/v)^(derivativeOrder)*(  ( 1/abs(v)  )/( ( (EI*s^4)/v^4  ) +m*s^2 + C*s + k)   )*exp(-s*(x-xp)/v)
+  else
+    return 0
+  end
+end
 
 """
     ICResponse(x, s, v, parameters::RailDataStructures.RailParameters, C, k; derivativeOrder::Int = 0)
 
-Returns the response of the Laplace-domain rail to the initial conditions at a position `x`, Laplace variable `s`, for rail parameters `parameters` (see #TODO: reference), foundation damping `C`, track modulus `k`.
+Return the response of the Laplace-domain rail to the initial conditions at a position `x`, Laplace variable `s`, for rail parameters `parameters` (see #TODO: reference), foundation damping `C`, track modulus `k`.
 Changing the optional keyword parameter `derivativeOrder` will instead return the derivative of the response of order `derivativeOrder` with respect to time.
 For zero velocity, an undisturbed beam response is enforced, otherwise, the travelling wave solution for a homogeneous foundation is used.
 By default, it uses a travelling wave associated with the left-most beam segment. To change this, use the optional keyword parameters `C_init` and `k_init` to set the foundation damping and track modulus of the travelling wave solution.
@@ -291,6 +317,13 @@ function ICResponse(x, s, v, xp, parameters::RailDataStructures.RailParameters, 
   if v == 0
     return 0
   end
+
+  vLessThanZero = false
+  if v<0
+    vLessThanZero = true
+    v = -v
+  end
+
 
   EI, m = parameters.EI, parameters.m
   Dt = real(typeof(s))
@@ -410,6 +443,10 @@ function ICResponse(x, s, v, xp, parameters::RailDataStructures.RailParameters, 
 
 
   θ = x-xp
+  if vLessThanZero
+    θ = -θ
+  end
+
   if θ<0
     if(β<β_cr)
       Y₀ = wMinus(θ)
