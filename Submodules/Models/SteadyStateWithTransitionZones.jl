@@ -19,7 +19,7 @@ function CalculateDeformation(xVals, x_p, beamParameters::RailDataStructures.Rai
   mType = mType <: Complex ? mType : Complex{mType}
   EI = beamParameters.EI
   #m = beamParameters.m
-  tzList = beamParameters.transitionZones
+  tzList = copy(beamParameters.transitionZones)
 
   x_p_index = 0 #Stores the index of x_p in tz_list
   for (tzi, tz) in enumerate(tzList)
@@ -38,7 +38,7 @@ function CalculateDeformation(xVals, x_p, beamParameters::RailDataStructures.Rai
   if x_p_index == 0
     k = tzList[end].k_right
     C = tzList[end].C_right
-    append!(tzList, RailwayDeformation.TransitionZone(position = x_p, k_left = k, k_right = k, C_left = C, C_right = C))
+    append!(tzList, [RailDataStructures.TransitionZone(position = x_p, k_left = k, k_right = k, C_left = C, C_right = C)])
   end
 
   #----Get characteristic roots for each segment and remove growing terms in left- and right-most segments.
@@ -86,7 +86,6 @@ function CalculateDeformation(xVals, x_p, beamParameters::RailDataStructures.Rai
   for (xi, x) in enumerate(xVals) #Assumes that xVals is are in ascending order (say from a call to LinRange).
 
     while segmentIndex <= length(tzList) && x > tzList[segmentIndex].position
-      println(segmentIndex)#BUG remove
       segmentIndex += 1
     end
 

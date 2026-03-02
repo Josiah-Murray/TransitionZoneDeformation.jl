@@ -25,7 +25,7 @@ function LaplaceDomainFunction(xVals, s, xp, v, beamParameters::RailDataStructur
 
 
 
-  tzList = beamParameters.transitionZones
+  tzList = copy(beamParameters.transitionZones)
 
   #||--Find b values--||#
   #Solve for the undetermined coefficients by solving a linear system
@@ -102,7 +102,7 @@ function LaplaceDomainFunction(xVals, s, xp, v, beamParameters::RailDataStructur
       ŷ[xi] = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) + ICResponse(x, s, v, xp, beamParameters, C, k) + ParticularResponse(x, s, v, xp, beamParameters, C, k)  #(1/abs(v))*(exp(-s*(x-xp)/v)  /  (  ( (beamParameters.EI*s^4)/v^4 ) +beamParameters.m*s^2 + C*s + k )  )*Utilities.Heaviside((x-xp)/v)
     end
 
-    ŷ[xi] = ParticularResponse(x, s, v, xp, beamParameters, C, k)
+    #ŷ[xi] = ParticularResponse(x, s, v, xp, beamParameters, C, k)
     #ŷ[xi] = b1*exp(r1*x) + b2*exp(r2*x) + b3*exp(r3*x) + b4*exp(r4*x) #BUG
 
   end
@@ -147,7 +147,7 @@ function CoeffSolver(s, xp, v, parameters::RailDataStructures.RailParameters) #T
   Dt = real(typeof(s))
 
   #Type of tzList specified so that autocomplete works.
-  tzList = parameters.transitionZones
+  tzList = copy(parameters.transitionZones)
   EI, m = parameters.EI, parameters.m
 
   #LHS matrix for system enforcing continuity conditions.

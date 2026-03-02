@@ -4,14 +4,14 @@ include(joinpath(@__DIR__, "../RailwayDeformation.jl"))
 import .RailwayDeformation as RD
 
 
-transitionZones = [RD.RailDataStructures.TransitionZone( k_left = 4, k_right = 1, C_left = 0.5, C_right = 1, position = -1 )]
-transitionZones = RD.AppendTransitionZone(transitionZones, 2, 0.5, 0.5)
+transitionZones = [RD.RailDataStructures.TransitionZone( k_left = 4, k_right = 1, C_left = 0.5, C_right = 1, position = 0 )]
+#transitionZones = RD.AppendTransitionZone(transitionZones, 2, 0.5, 0.5)
 
 beamParameters = RD.RailDataStructures.RailParameters( EI = 1.0, m = 1.0, transitionZones = transitionZones )
 
 xVals = LinRange(-10, 10, 100)
 
-deformation = RD.SteadyStateWithTransitionZones.CalculateDeformation(xVals, 0, beamParameters)
+deformation = RD.SteadyStateWithTransitionZones.CalculateDeformation(xVals, -1, beamParameters)
 
 fillColours = [RGB(1,0,0) for j in eachindex(xVals)]
 
