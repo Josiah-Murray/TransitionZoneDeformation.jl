@@ -1,5 +1,5 @@
 module LaplaceInversionImplementations
-using ..NILaplace
+using ..SpatialLaplaceInversion
 
 """
     GWRImplementation(xVals, tVals, parameters, LaplaceFunction; M = 20, shift_parameter = 0)
@@ -11,7 +11,7 @@ The optional parameters `M` and `shift_parameter` correspond to the parameters o
 function GWRImplementation(xVals, tVals, parameters, LaplaceFunction; M = 20, shift_parameter = 0)
   deformations = zeros(typeof(tVals[1]), length(xVals), length(tVals))
   for (ti, t) in enumerate(tVals)
-    deformations[:,ti] = real(NILaplace.GaverWynnRho.GWR_array(LaplaceFunction, t, M, shift_parameter = shift_parameter) )
+    deformations[:,ti] = real(SpatialLaplaceInversion.GaverWynnRho.GWR_array(LaplaceFunction, t, M, shift_parameter = shift_parameter) )
   end
 
   return deformations
@@ -36,7 +36,7 @@ The optional parameters `M`, `σ`, and `b` correspond to the parameters of Weeks
 """
 function WeeksImplementation(xVals, tVals, parameters, LaplaceFunction; M = 20, σ = 1/2, b = 1)
 
-  deformation_WeeksStruct = NILaplace.Weeks.GenerateWeeksApproximation(
+  deformation_WeeksStruct = SpatialLaplaceInversion.Weeks.GenerateWeeksApproximation(
     LaplaceFunction,
     M,
     σ,
@@ -44,7 +44,7 @@ function WeeksImplementation(xVals, tVals, parameters, LaplaceFunction; M = 20, 
   )
   deformations = zeros(typeof(tVals[1]), length(xVals), length(tVals))
   for (ti, t) in enumerate(tVals)
-    deformations[:,ti] = real(NILaplace.Weeks.EvalWeeks(deformation_WeeksStruct, t))
+    deformations[:,ti] = real(SpatialLaplaceInversion.Weeks.EvalWeeks(deformation_WeeksStruct, t))
   end
 
   return deformations
