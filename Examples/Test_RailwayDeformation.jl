@@ -1,78 +1,23 @@
-using Revise
 using Plots
 import TransitionZoneDeformation as TZD
 
-
+#Define the list of transition zones, each of which is a custom data type.
 transitionZones = [TZD.RailDataStructures.TransitionZone( k_left = 4, k_right = 1, C_left = 0.5, C_right = 1, position = 0 )]
-#transitionZones = TZD.AppendTransitionZone(transitionZones, 2, 0.5, 0.5)
 
+#Add another transition zone at position 5 and with k_right  = 0.5 and C_right = 2. The left properties are added automatically based on the right properties of the previous transition zone.
+transitionZones = TZD.AppendTransitionZone(transitionZones, 5, 0.5, 2)
+
+#Create a RailParameters object that contains the properties of the beam and the list of transition zones.
 beamParameters = TZD.RailDataStructures.RailParameters( EI = 1.0, m = 1.0, transitionZones = transitionZones )
 
+#Define the x values for which the solution should be found.
 xVals = LinRange(-10, 10, 100)
 
-deformation = TZD.SteadyStateWithTransitionZones.CalculateDeformation(xVals, -1, beamParameters)
+#Location of point force.
+xp = 3
 
-fillColours = [RGB(1,0,0) for j in eachindex(xVals)]
-
-
-
-kMax =  0
-C_Max = 0
-kmin = Inf
-C_min = Inf
-for tz in transitionZones
-  if tz.k_left > kMax
-    global kMax = tz.k_left
-  end
-  if tz.k_right > kMax
-    global kMax = tz.k_right
-  end
-  if tz.C_left > C_Max
-    global C_Max = tz.C_left
-  end
-  if tz.C_right > C_Max
-    global C_Max = tz.C_right
-  end
-  if tz.k_left < kmin
-    global kmin = tz.k_left
-  end
-  if tz.k_right < kmin
-    global kmin = tz.k_right
-  end
-  if tz.C_left < C_min
-    global C_min = tz.C_left
-  end
-  if tz.C_right < C_min
-    global C_min = tz.C_right
-  end
-end
-
-
-colourDark = [0.2, 0.2, 0.18]
-colourLight = [0.8, 0.8, 0.85]
-
-gradientFunc_k = k -> (k - kmin)/(kMax - kmin)
-gradientFunc_C = C -> (C - C_min)/(C_Max - C_min)
-
-for (i, x) in enumerate(xVals)
-  for tz in transitionZones
-    if x < tz.position
-      fillColours[i] = RGB(
-        colourLight[1] - gradientFunc_k(tz.k_left)*(colourLight[1]-colourDark[1]) - gradientFunc_C(tz.C_left)*(colourLight[1]-colourDark[1])
-        , colourLight[2] - gradientFunc_k(tz.k_left)*(colourLight[2]-colourDark[2]) - gradientFunc_C(tz.C_left)*(colourLight[2]-colourDark[2])
-        , colourLight[3] - gradientFunc_k(tz.k_left)*(colourLight[3]-colourDark[3]) - gradientFunc_C(tz.C_left)*(colourLight[3]-colourDark[3])
-      )
-      break
-    elseif x >= transitionZones[end].position
-      fillColours[i] = RGB(
-        colourLight[1] - gradientFunc_k(tz.k_right)*(colourLight[1]-colourDark[1]) - gradientFunc_C(tz.C_right)*(colourLight[1]-colourDark[1])
-        , colourLight[2] - gradientFunc_k(tz.k_right)*(colourLight[2]-colourDark[2]) - gradientFunc_C(tz.C_right)*(colourLight[2]-colourDark[2])
-        , colourLight[3] - gradientFunc_k(tz.k_right)*(colourLight[3]-colourDark[3]) - gradientFunc_C(tz.C_right)*(colourLight[3]-colourDark[3])
-      )
-    end
-  end
-end
-
+#Calculate the steady-state deformation for the system.
+deformation = TZD.SteadyStateWithTransitionZones.CalculateDeformation(xVals, xp, beamParameters)
 
 
 
@@ -84,13 +29,13 @@ p = plot(xVals
   , ylims = (-0.4, 0.1)
   , ylabel = "Deformation"
   , background_color = RGB(0.9, 0.9, 0.95)
-  , fill = (-0.5, fillColours)
   , linestyle = :solid
   , linewidth = 4
   , color = RGB(0.2, 0.2, 0.1)
   , frame_style = :box
+  , legend = false
     )
 for tz in transitionZones
-  p = vline!([tz.position], linestyle = :dash, color = :white, linewidth = 1)
+  p = vline!([tz.position], linestyle = :dash, color = :black, linewidth = 1)
 end
 display(p)

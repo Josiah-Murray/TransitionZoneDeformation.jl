@@ -1,79 +1,48 @@
-using Revise
 using Plots
 import TransitionZoneDeformation as TZD
 
-
+#Define the list of transition zones, each of which is a custom data type.
 transitionZones = [TZD.RailDataStructures.TransitionZone( k_left = 1, k_right = 1.5, C_left = 1, C_right = 1.5, position = -1 )]
-transitionZones = TZD.AppendTransitionZone(transitionZones, 1, 1, 1)
-#transitionZones = TZD.AppendTransitionZone(transitionZones, 3, 2, 2)
 
+#Add another transition zone at position 5 and with k_right  = 0.5 and C_right = 2. The left properties are added automatically based on the right properties of the previous transition zone.
+transitionZones = TZD.AppendTransitionZone(transitionZones, 1, 1, 1)
+
+#Create a RailParameters object that contains the properties of the beam and the list of transition zones.
 beamParameters = TZD.RailDataStructures.RailParameters( EI = 1.0, m = 1.0, transitionZones = transitionZones )
-v = -1
-xp = 0
-tVal = 1.0
+
+#Speed and location of point force.
+v = 1
+xp = -3
+
+#Time and space values for which to find the solution. (Note that the GWR implementation applied later cannot be evaluated for time zero).
+tVals = LinRange{BigFloat}(0.01, 6, 20) #BigFloat data type is recommended for the GWR algorithm.
 xVals = LinRange(-10, 10, 100)
 
+#Define the Laplace-domain solution for the deformation of the beam. This will be an input to an inversion algorithm which will then return the time-domain solution.
 LaplaceDomainFunction = s -> TZD.DynamicWithTransitionZones.LaplaceDomainFunction(xVals, s, xp, v, beamParameters)
 
-deformation = TZD.LaplaceInversionImplementations.GWRImplementation(xVals, [tVal], beamParameters, LaplaceDomainFunction; M = 20, shift_parameter = 0.01)[ :, 1]
-#deformation  = abs.(LaplaceDomainFunction(0.5+1im))
-fillColours = [RGB(1,0,0) for j in eachindex(xVals)]
+#Apply a numerical inversion algorithm to find the time-domain deformation of the system.
+M = 40
+setprecision(3*M) #Recommended precision for the GWR algorithm.
+deformation = TZD.LaplaceInversionImplementations.GWRImplementation(xVals, tVals, beamParameters, LaplaceDomainFunction; M = 20)
 
-
-
-kMax =  0
-C_Max = 0
-kmin = Inf
-C_min = Inf
-for tz in transitionZones
-  if tz.k_left > kMax
-    global kMax = tz.k_left
-  end
-  if tz.k_right > kMax
-    global kMax = tz.k_right
-  end
-  if tz.C_left > C_Max
-    global C_Max = tz.C_left
-  end
-  if tz.C_right > C_Max
-    global C_Max = tz.C_right
-  end
-  if tz.k_left < kmin
-    global kmin = tz.k_left
-  end
-  if tz.k_right < kmin
-    global kmin = tz.k_right
-  end
-  if tz.C_left < C_min
-    global C_min = tz.C_left
-  end
-  if tz.C_right < C_min
-    global C_min = tz.C_right
+#Produce an animation of the solution.
+@gif for (ti,t) in enumerate(tVals)
+  p = plot(xVals
+    , -deformation[ :, ti]
+    , xlabel = "x"
+    , xlims = (-10, 10)
+    , ylims = (-0.4, 0.1)
+    , ylabel = "Deformation"
+    , background_color = RGB(0.9, 0.9, 0.95)
+    , linestyle = :solid
+    , linewidth = 4
+    , color = RGB(0.2, 0.2, 0.1)
+    , frame_style = :box
+    , title = "t = $(round(Float64(t), digits = 2))"
+    , legend = false
+      )
+  for tz in transitionZones
+    p = vline!([tz.position], linestyle = :dash, color = :black, linewidth = 1)
   end
 end
-
-
-colourDark = [0.2, 0.2, 0.18]
-colourLight = [0.8, 0.8, 0.85]
-
-gradientFunc_k = k -> (k - kmin)/(kMax - kmin)
-gradientFunc_C = C -> (C - C_min)/(C_Max - C_min)
-
-
-p = plot(xVals
-  , -deformation
-  , xlabel = "x"
-  , xlims = (-10, 10)
-  , ylims = (-0.4, 0.1)
-  , ylabel = "Deformation"
-  , background_color = RGB(0.9, 0.9, 0.95)
-  #, fill = (-0.5, fillColours)
-  , linestyle = :solid
-  , linewidth = 4
-  , color = RGB(0.2, 0.2, 0.1)
-  , frame_style = :box
-    )
-for tz in transitionZones
-  p = vline!([tz.position], linestyle = :dash, color = :white, linewidth = 1)
-end
-display(p)
