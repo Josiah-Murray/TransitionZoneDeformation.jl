@@ -11,7 +11,7 @@ Below is a sample figure showing a point load moving over successive transtion z
 pkg> add https://github.com/Josiah-Murray/SpatialLaplaceInversion.git
 pkg> add https://github.com/Josiah-Murray/TransitionZoneDeformation.jl.git
 ```
-Note that currently, the dependence on SpatialLaplaceInversion.jl must be handled manually.****
+Note that currently, the dependence on SpatialLaplaceInversion.jl must be handled manually.
 
 ## References
 [1] Murray, J., Meylan, M. H., Ngo, T., Thamwattana, N., & Indraratna, B. (2025). Analytical Solution for Railway Transition Zones With Abrupt Changes in Elastic Stiffness. Engineering Reports, 7(5). https://doi.org/10.1002/eng2.70106
